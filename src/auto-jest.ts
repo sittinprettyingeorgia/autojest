@@ -1,4 +1,4 @@
-import { AutoJestI, ParserI, FormatterI, FileWriterI } from './types'
+import { AutoJestI, ParserI, FormatterI, FileWriterI } from './types';
 
 /**
  * The AutoJest class is a singleton that handles all aspects of automating jest
@@ -6,27 +6,27 @@ import { AutoJestI, ParserI, FormatterI, FileWriterI } from './types'
  *
  */
 class AutoJestFactory {
-  static autoJest: () => AutoJestI
+  static autoJest: () => AutoJestI;
 
   static staticConstructor = (() => {
     class AutoJest implements AutoJestI {
-      parser: ParserI
+      parser: ParserI;
 
       constructor() {
-        this.parser = 'wanda'
+        this.parser = 'wanda';
       }
     }
 
-    let autoJest: AutoJestI
+    let autoJest: AutoJestI;
 
     AutoJestFactory.autoJest = (): AutoJestI => {
       if (!autoJest) {
-        return new AutoJest()
+        return new AutoJest();
       } else {
-        return autoJest
+        return autoJest;
       }
-    }
-  })()
+    };
+  })();
 }
 
-export default AutoJestFactory
+export default AutoJestFactory;
