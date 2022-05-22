@@ -1,19 +1,24 @@
 import { AutoJestI, ParserI, FormatterI, FileWriterI } from './types';
-
+import React from 'react';
 /**
- * The AutoJest class is a singleton that handles all aspects of automating jest
- * test suites.
+ * The AutoJestFactory class is a singleton
+ * that handles returning an autoJest singleton instance.
  *
  */
 class AutoJestFactory {
   static autoJest: () => AutoJestI;
 
   static staticConstructor = (() => {
+    /**
+     * The AutoJest class handles all aspects of jest test suite automation.
+     */
     class AutoJest implements AutoJestI {
-      parser: ParserI;
+      parseComponent: (component: React.ReactComponent) => string;
 
       constructor() {
-        this.parser = 'wanda';
+        this.parseComponent = (_component: React.ReactComponent) => {
+          return 'placeholder';
+        };
       }
     }
 
