@@ -13,10 +13,10 @@ class AutoJestFactory {
      * The AutoJest class handles all aspects of jest test suite automation.
      */
     class AutoJest implements AutoJestI {
-      parseComponent: (component: React.ReactComponent) => string;
+      parseComponent: (component: React.Component) => string;
 
       constructor() {
-        this.parseComponent = (_component: React.ReactComponent) => {
+        this.parseComponent = (_component: React.Component) => {
           return 'placeholder';
         };
       }
