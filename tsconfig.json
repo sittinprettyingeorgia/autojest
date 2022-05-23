@@ -17,10 +17,10 @@
     "outDir": "dist/",
     "baseUrl": "src/",
     "listFiles": false,
-    "noEmitHelpers": true,
+    "noEmitHelpers": false,
     "jsx": "react-jsx"
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "*.ts"],
   "exclude": ["node_modules", "dist"],
   "compileOnSave": false
 }

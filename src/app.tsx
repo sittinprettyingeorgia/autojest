@@ -14,9 +14,13 @@ const App = () => {
 
   if (state1) {
     return (
-      <React.Fragment>
-        <div data-testid="div1">
-          <p>This is div1 paragraph</p>
+      <div
+        onClick={handleClick1}
+        onChange={handleClick1}
+        onMouseEnter={handleClick1}
+      >
+        <div onClick={handleClick1} data-testid="div1">
+          <p onClick={handleClick1}>This is div1 paragraph</p>
         </div>
         <div data-testid="div2">
           <p>
@@ -24,7 +28,7 @@ const App = () => {
           </p>
           <button onClick={handleClick1}>change state1</button>
         </div>
-      </React.Fragment>
+      </div>
     );
   } else {
     return (

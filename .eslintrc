@@ -14,7 +14,7 @@
     "no-use-before-define": 2,
     "require-atomic-updates": 2,
     "block-scoped-var": 2,
-    "complexity": ["error", { "max": 8 }],
+    "complexity": ["error", { "max": 15 }],
     "guard-for-in": 2,
     "no-magic-numbers": 2,
     "no-nested-ternary": 2,
@@ -28,8 +28,9 @@
     "no-empty-function": 2,
     "array-bracket-newline": 2,
     "array-bracket-spacing": 2,
-    "no-extra-parens": 2,
     "wrap-iife": 2,
-    "semi": 2
+    "semi": 2,
+    "no-sequences": 0,
+    "space-in-parens": 2
   }
 }
