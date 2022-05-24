@@ -55,6 +55,7 @@ const handleOpeningBracket = async (
     jsx,
     {}
   );
+
   str = str ? str.replace('children:', '') + count : 'children';
   //while our current key is present we will increment the count and see if the new key is found.
   //EX. div1 in children then create div2 and check if in children
