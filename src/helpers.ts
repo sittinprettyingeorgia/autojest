@@ -24,12 +24,12 @@ const getChildren = async (
   str: string,
   jsx: string,
   children: ChildList
-) => {
+): Promise<any> => {
   if (jsx.length <= ZERO || jsx.indexOf('{') < ZERO) {
     const lastChild: ChildList = {};
     const [key, val] = jsx.slice(ZERO, jsx.indexOf('}')).split(':');
     lastChild[key] = val;
-    return [lastChild, NEG_ONE];
+    return [lastChild, jsx.indexOf('}')];
   }
 
   for (let i = start; i < jsx.length; i++) {
@@ -43,11 +43,16 @@ const getChildren = async (
     if (char === '{' || char === '[') {
       //delete our comma key since we are currently inside of brackets.
       delete DONT_KEEP[','];
-      console.log('currentSTr', str);
+      const newStr = str ? str.replace('children:', '') : 'children';
 
       const [newChild, lastIndexOfJsx] = await getChildren(++i, '', jsx, {});
-      children[str ? str : 'children'] = { ...(newChild as ChildList) };
 
+      if (typeof newChild === 'string') {
+        children[newStr] = newChild;
+        return [children, lastIndexOfJsx];
+      }
+
+      children[newStr] = { ...(newChild as ChildList) };
       str = '';
       if ((lastIndexOfJsx as number) === NEG_ONE) break;
       else {
@@ -56,18 +61,29 @@ const getChildren = async (
     } else if (char === '}' || char === ']') {
       //add our comma back since we are currently outside of brackets.
       DONT_KEEP[','] = ',';
-
-      if (str.includes(',')) {
+      if (!str) {
+        return [children, ++i];
+      } else if (str.includes('children:')) {
+        str = str.replace('children:', '');
+        return [str, ++i];
+      } else if (str.includes(':')) {
         const newChildren: ChildList = {};
         const tempSplit = str.split(',');
         for (const child of tempSplit) {
           const [key, val] = child.split(':');
           newChildren[key] = val;
         }
-        return [newChildren, ++i];
+        children = newChildren;
       }
 
-      return [children, ++i];
+      const [newChild, lastIndexOfJsx] = await getChildren(
+        ++i,
+        '',
+        jsx,
+        children
+      );
+
+      return [newChild, lastIndexOfJsx];
     }
   }
 
@@ -75,7 +91,6 @@ const getChildren = async (
 };
 
 export const getJson = async (jsx: string) => {
-  const mainChild = await getChildren(ZERO, '', jsx, {}); //retrieve the main child and the rest of the jsx string
-  console.log('mainChild', mainChild);
+  const [mainChild, _] = await getChildren(ZERO, '', jsx, {}); //retrieve the main child and the rest of the jsx string
   return mainChild;
 };

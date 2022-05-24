@@ -22,13 +22,15 @@ describe('testing autojest', () => {
         .replaceAll(assignRegex, '')
         .slice(ZERO, jsx.indexOf(';'))
     );
+    console.log(jsxList[ZERO]);
     jsxList = jsxList.map((jsx) => jsx.slice(ZERO, jsx.indexOf(';')));
-    console.log('jsxList', await getJson(jsxList[ZERO]));
+    const parseResults = await Promise.all(
+      jsxList.map(async (item) => {
+        return getJson(item);
+      })
+    );
     // eslint-disable-next-line no-magic-numbers
-    //console.log('json', await getJson(jsxList[0]));
-    /*for (const jsx of jsxList) {
-      await getJson(jsx);
-    }*/
+    console.log('results: ', JSON.stringify(parseResults[ZERO], undefined, 2));
     const autojest = AutoJestFactory.autoJest();
     expect(autojest).not.toBeNull();
   });

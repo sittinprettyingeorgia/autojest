@@ -1,9 +1,9 @@
 import React from 'react';
 export interface AutoJestI {
-  parseComponent: (component: React.ReactComponent) => string;
+  parseComponent: (component: React.Component) => string;
 }
 export interface ParserI {
-  parseComponent: () => string;
+  parseComponent: (component: React.Component) => string;
 }
 export interface FormatterI {
   formatComponent: () => string;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { Fragment, useState } from 'react';
 
 const App = () => {
   const [state1, setState1] = useState(false);
@@ -32,14 +32,14 @@ const App = () => {
     );
   } else {
     return (
-      <React.Fragment>
+      <Fragment>
         <div data-testid="div3">
           <p>
             This is a paragraph3.<span>This is a span3</span>
           </p>
           <button onClick={handleClick2}>change state 3</button>
         </div>
-      </React.Fragment>
+      </Fragment>
     );
   }
 };

@@ -14,7 +14,7 @@
     "no-use-before-define": 2,
     "require-atomic-updates": 2,
     "block-scoped-var": 2,
-    "complexity": ["error", { "max": 15 }],
+    "complexity": ["error", { "max": 30 }],
     "guard-for-in": 2,
     "no-magic-numbers": 2,
     "no-nested-ternary": 2,
