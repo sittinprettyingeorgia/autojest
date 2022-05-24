@@ -40,19 +40,28 @@ const getChildren = async (
       str += char;
     }
 
-    if (char === '{' || char === '[') {
+    if (char === '{') {
       //delete our comma key since we are currently inside of brackets.
       delete DONT_KEEP[','];
-      const newStr = str ? str.replace('children:', '') : 'children';
-
+      let count = 1;
+      let newStr = str ? str.replace('children:', '') + count : 'children';
       const [newChild, lastIndexOfJsx] = await getChildren(++i, '', jsx, {});
+      //while our current key is present we will increment the count and see if the new key is found.
+      //EX. div1 in children then create div2 and check if in children
+      if (newStr in children) {
+        ++count;
+        newStr = newStr.replaceAll(/\d+/g, '').concat(count.toString());
+      }
 
-      if (typeof newChild === 'string') {
-        children[newStr] = newChild;
+      children[newStr] =
+        typeof newChild === 'string'
+          ? newChild
+          : { ...(newChild as ChildList) };
+
+      if (typeof newChild === 'string' || newStr === 'children') {
         return [children, lastIndexOfJsx];
       }
 
-      children[newStr] = { ...(newChild as ChildList) };
       str = '';
       if ((lastIndexOfJsx as number) === NEG_ONE) break;
       else {
