@@ -20,7 +20,7 @@ const OPEN_BRACKETS: BracketString = {
 const CLOSE_BRACKETS: BracketString = {
   '}': '}',
 };
-let textValueOnHtmlLevel = false;
+let textValueIsJsxChild = false;
 const stack: string[] = [];
 interface ChildList {
   [key: string]: any;
@@ -58,7 +58,7 @@ const handleOpeningBracket = async (
       .filter((item) => Boolean(item));
 
     if (nextElem) {
-      textValueOnHtmlLevel = true;
+      textValueIsJsxChild = true;
       const [childrenKey, textValue] = singleTextChild
         .split(':')
         .filter((item) => Boolean(item));
@@ -67,6 +67,8 @@ const handleOpeningBracket = async (
     }
   }
 
+  // chop the children: if we are working with jsx elements
+  // otherwise assign children because it is likely a text value.
   str = str ? str.replace('children:', '') + count : 'children';
   str = str.replaceAll(',', '');
   //while our current key is present we will increment the count and see if the new key is found.
@@ -76,8 +78,11 @@ const handleOpeningBracket = async (
     str = str.replaceAll(/\d+/g, '').concat(count.toString());
   }
 
-  children[str] =
-    typeof newChild === 'string' ? newChild : { ...(newChild as ChildList) };
+  if (typeof newChild === 'string') {
+    children['text-as-jsx-child'] = newChild;
+  } else {
+    children[str] = { ...(newChild as ChildList) };
+  }
 
   if (typeof newChild === 'string' || str === 'children') {
     propagate = true;
@@ -162,9 +167,9 @@ const getChildren = async (
       i = lastIndexOfJsx;
     } else if (char in CLOSE_BRACKETS) {
       stack.pop();
-      if (textValueOnHtmlLevel) {
+      if (textValueIsJsxChild) {
         DONT_KEEP[','] = ',';
-        textValueOnHtmlLevel = false;
+        textValueIsJsxChild = false;
         continue;
       } else {
         return handleClosingBracket(i, str, jsx, children, getChildren);
