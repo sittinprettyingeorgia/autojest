@@ -1,5 +1,12 @@
-import { AutoJestI, ParserI, FormatterI, FileWriterI } from './types';
+import {
+  AutoJestI,
+  ChildList,
+  ParserI,
+  FormatterI,
+  FileWriterI,
+} from './types';
 import React from 'react';
+import { Parser } from './parser';
 /**
  * The AutoJestFactory class is a singleton
  * that handles returning an autoJest singleton instance.
@@ -13,11 +20,13 @@ class AutoJestFactory {
      * The AutoJest class handles all aspects of jest test suite automation.
      */
     class AutoJest implements AutoJestI {
-      parseComponent: (component: React.Component) => string;
+      parseComponent: (component: () => JSX.Element) => ChildList;
 
+      // eslint-disable-next-line no-empty-function
       constructor() {
-        this.parseComponent = (_component: React.Component) => {
-          return 'placeholder';
+        this.parseComponent = (component: () => JSX.Element) => {
+          const parser = new Parser();
+          return parser.parseComponent(component);
         };
       }
     }
