@@ -59,7 +59,7 @@ const handleOpeningBracket = async (
 
     if (nextElem) {
       textValueIsJsxChild = true;
-      const [childrenKey, textValue] = singleTextChild
+      const [_, textValue] = singleTextChild
         .split(':')
         .filter((item) => Boolean(item));
       children['text-as-jsx-child'] = textValue;
@@ -166,6 +166,8 @@ const getChildren = async (
       str = '';
       i = lastIndexOfJsx;
     } else if (char in CLOSE_BRACKETS) {
+      //the stack will let us know if we are working with a jsx element or
+      //if we have a text value
       stack.pop();
       if (textValueIsJsxChild) {
         DONT_KEEP[','] = ',';
