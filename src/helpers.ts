@@ -20,7 +20,8 @@ const OPEN_BRACKETS: BracketString = {
 const CLOSE_BRACKETS: BracketString = {
   '}': '}',
 };
-
+let textValueOnHtmlLevel = false;
+const stack: string[] = [];
 interface ChildList {
   [key: string]: any;
 }
@@ -43,11 +44,6 @@ const handleOpeningBracket = async (
 
   let count = 1;
   let propagate = false;
-  //if there is a comma in our str then we are going to retrieve
-  //children for the current str.
-  if (str.includes(',')) {
-    str = str.replace(',', '');
-  }
 
   const [newChild, lastIndexOfJsx] = await recursiveFunction(
     ++start,
@@ -56,7 +52,23 @@ const handleOpeningBracket = async (
     {}
   );
 
+  if (str.includes('children:') && str.includes(',')) {
+    const [singleTextChild, nextElem] = str
+      .split(',')
+      .filter((item) => Boolean(item));
+
+    if (nextElem) {
+      textValueOnHtmlLevel = true;
+      const [childrenKey, textValue] = singleTextChild
+        .split(':')
+        .filter((item) => Boolean(item));
+      children['text'] = textValue;
+      str = nextElem;
+    }
+  }
+
   str = str ? str.replace('children:', '') + count : 'children';
+  str = str.replaceAll(',', '');
   //while our current key is present we will increment the count and see if the new key is found.
   //EX. div1 in children then create div2 and check if in children
   if (str in children) {
@@ -94,15 +106,16 @@ const handleClosingBracket = async (
     return [{ ...children }, ++start];
   } else if (str.includes('children:')) {
     str = str.replace('children:', '');
+
     return [str, ++start];
   } else if (str.includes(':')) {
     const newChildren: ChildList = {};
     const tempSplit = str.split(',');
+
     for (const child of tempSplit) {
       const [key, val] = child.split(':');
-      newChildren[key] = val;
+      children[key] = val;
     }
-    children = { ...newChildren };
   }
 
   const [newChild, lastIndexOfJsx] = await recursiveFunction(
@@ -137,6 +150,7 @@ const getChildren = async (
     }
 
     if (char in OPEN_BRACKETS) {
+      stack.push();
       const [newChildren, lastIndexOfJsx, propagate] =
         await handleOpeningBracket(i, str, jsx, children, getChildren);
 
@@ -147,7 +161,14 @@ const getChildren = async (
       str = '';
       i = lastIndexOfJsx;
     } else if (char in CLOSE_BRACKETS) {
-      return handleClosingBracket(i, str, jsx, children, getChildren);
+      stack.pop();
+      if (textValueOnHtmlLevel) {
+        DONT_KEEP[','] = ',';
+        textValueOnHtmlLevel = false;
+        continue;
+      } else {
+        return handleClosingBracket(i, str, jsx, children, getChildren);
+      }
     }
   }
 
