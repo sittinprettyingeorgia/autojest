@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import App from './app';
 interface BracketString {
   [key: string]: string;
@@ -52,13 +53,15 @@ const handleOpeningBracket = async (
 
     if (nextElem) {
       textValueIsJsxChild = true;
-      const [_, textValue] = singleTextChild
+      const [childrenKey, textValue] = singleTextChild
         .split(':')
         .filter((item) => Boolean(item));
 
-      children['children'] = { ...children, 'text-as-jsx-child': textValue };
-      children = children['children'];
-
+      children[childrenKey] = {
+        ...children,
+        'text-as-jsx-child': textValue,
+      };
+      children = children[childrenKey];
       str = nextElem;
     }
   }
@@ -80,11 +83,26 @@ const handleOpeningBracket = async (
     str = str.replaceAll(/\d+/g, '').concat(count.toString());
   }
 
-  children[str] =
-    typeof newChild === 'string' && newChild.includes('children:')
-      ? { children: newChild.replace('children:', '') }
-      : newChild;
-  if (typeof newChild === 'string' || str === 'children') {
+  if (str === 'children') {
+    propagate = true;
+    children[str] =
+      typeof newChild === 'string' && newChild.includes('children:')
+        ? { 'text-as-jsx-child': newChild.replace('children:', '') }
+        : newChild;
+  } else {
+    children[str] =
+      typeof newChild === 'string' && newChild.includes('children:')
+        ? {
+            children: {
+              'text-as-jsx-child': newChild.replace('children:', ''),
+            },
+          }
+        : 'children' in newChild
+        ? { ...newChild }
+        : { children: newChild };
+  }
+
+  if (typeof newChild === 'string') {
     propagate = true;
   }
 
@@ -107,11 +125,12 @@ const handleClosingBracket = async (
   //we do not want a comma in our str.
   DONT_KEEP[','] = ',';
 
+  let propagate = true;
+
   if (!str) {
-    return [{ ...children }, ++start];
+    return [{ ...children }, ++start, propagate];
   } else if (str.includes('children:')) {
-    //str = str.replace('children:', '');
-    return [str, ++start];
+    return [str, ++start, propagate];
   } else if (str.includes(':')) {
     const tempSplit = str.split(',');
 
@@ -119,6 +138,7 @@ const handleClosingBracket = async (
       const [key, val] = child.split(':');
       children[key] = val;
     }
+    propagate = false;
   }
 
   const [newChild, lastIndexOfJsx] = await recursiveFunction(
@@ -128,7 +148,7 @@ const handleClosingBracket = async (
     children
   );
 
-  return [newChild, lastIndexOfJsx];
+  return [newChild, lastIndexOfJsx, propagate];
 };
 
 const getChildren = async (
