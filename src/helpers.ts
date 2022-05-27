@@ -62,7 +62,7 @@ const handleOpeningBracket = async (
       const [childrenKey, textValue] = singleTextChild
         .split(':')
         .filter((item) => Boolean(item));
-      children['text'] = textValue;
+      children['text-as-jsx-child'] = textValue;
       str = nextElem;
     }
   }
