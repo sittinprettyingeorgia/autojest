@@ -27,7 +27,6 @@ const assignRegex = /, __assign/gi;
 const replaceRegex = /(children:)|,/gi;
 const stack: string[] = [];
 let textValueIsJsxChild = false;
-
 export const handleOpeningBracket = async (
   start: number,
   str: string,
@@ -214,7 +213,7 @@ export const cleanComponentString = (component: () => JSX.Element) => {
   return jsxList.map((jsx: string) => jsx.slice(ZERO, jsx.indexOf(';')));
 };
 
-const getJson = async (jsx: string) => {
+export const getJson = async (jsx: string) => {
   const [mainChild, _] = await getChildren(ZERO, '', jsx, {}); //retrieve the main child and the rest of the jsx string
   return mainChild;
 };

@@ -1,109 +1,113 @@
 /* eslint-disable no-magic-numbers */
-import App from '../app';
 import {
   Parser,
-  cleanComponentString,
   handleClosingBracket,
   handleOpeningBracket,
+  cleanComponentString,
   getChildren,
+  getJson,
 } from '../parser';
 
-//jsxChildren for parsed App component.
-const jsxChild1 = {
+const ZERO = 0;
+const appTransform1 = {
   div1: {
     onClick: 'handleClick1',
     onChange: 'handleClick1',
     onMouseEnter: 'handleClick1',
-    children: {
-      div1: {
-        onClick: 'handleClick1',
-        'data-testid': 'div1',
-        children: {
-          p1: {
-            onClick: 'handleClick1',
-            children: {
-              'text-as-jsx-child': 'Thisisdiv1paragraph',
-            },
-          },
-        },
-      },
-      div2: {
-        'data-testid': 'div2',
-        children: {
-          p1: {
-            children: {
-              'text-as-jsx-child': 'Thisisdiv2paragraph.',
-              span1: {
-                children: {
-                  'text-as-jsx-child': 'Thisisaspan1',
-                },
-              },
-            },
-          },
-          button1: {
-            onClick: 'handleClick1',
-            children: {
-              'text-as-jsx-child': 'changestate1',
-            },
-          },
-        },
-      },
-    },
+    children: { div1: [Object], div2: [Object] },
   },
 };
-const jsxChild2 = {
-  'react_1.Fragment1': {
-    children: {
-      div1: {
-        'data-testid': 'div3',
-        children: {
-          p1: {
-            children: {
-              'text-as-jsx-child': 'Thisisaparagraph3.',
-              span1: {
-                children: {
-                  'text-as-jsx-child': 'Thisisaspan3',
-                },
-              },
-            },
-          },
-          button1: {
-            onClick: 'handleClick2',
-            children: {
-              'text-as-jsx-child': 'changestate3',
-            },
-          },
-        },
-      },
-    },
-  },
-};
-const ZERO = 0;
-const testComponent = () => {
+const TestComponent1 = () => {
+  const handleClick = () => {
+    console.log('hello');
+  };
+
   return (
     <div data-testid="div1">
       <p>We have a paragraph1.</p>
       <span>We have a span 1</span>
+      <span>
+        <span>span within span</span>
+      </span>
+      <button onClick={handleClick}>inside button</button> outside button
     </div>
   );
 };
 
+const TestComponent2 = () => {
+  const handleClick = () => {
+    console.log('test');
+  };
+
+  return (
+    <div data-testid="div1">
+      <p>We have a paragraph1.</p>
+      <span>1</span>
+      <span>2</span>
+      <span>3</span>
+    </div>
+  );
+};
+
+const TestComponent3 = () => {
+  const handleClick = () => {
+    console.log('test');
+  };
+
+  return (
+    <div data-testid="div1">
+      <p>We have a paragraph1.</p>
+      <button onClick={handleClick}>inside button</button> outside button
+      <span>span1</span>
+      <span>span2</span>
+      <span>span3</span>
+      <span>span4</span>
+      <span>span5</span>
+      <span>span6</span>
+      <span>span7</span>
+      <span>span8</span>
+    </div>
+  );
+};
 describe('testing parser', () => {
-  describe('testing getChildren function', () => {
-    it('should return comp', async () => {
-      const compString = cleanComponentString(App);
-      const [result, _] = await getChildren(ZERO, '', compString[ZERO], {});
-      console.log('result', JSON.stringify(result, undefined, 2));
-      expect(result).not.toBeNull();
+  let parser: Parser;
+
+  beforeEach(() => {
+    parser = new Parser();
+  });
+  describe('testing cleanComponent method', () => {
+    it('should correctly clean a component', async () => {
+      const cleanComp = cleanComponentString(TestComponent2);
+      expect(cleanComp).toEqual(
+        '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
+      );
+      const results = await Promise.all(
+        cleanComp.map(async (component) => getJson(component))
+      );
+      expect(results).toEqual(
+        '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
+      );
     });
   });
+
   describe('testing parseComponent function', () => {
     it('should generate a component obj', async () => {
-      const parser = new Parser();
-      const parseResults = await parser.parseComponent(App);
-      expect(parseResults.length).toBe(2);
-      /*expect(parseResults[0]).toEqual(jsxChild1);
-      expect(parseResults[1]).toEqual(jsxChild2);*/
+      const parseResults1 = await parser.parseComponent(TestComponent1);
+      console.log(
+        'Expected TestComponent1',
+        JSON.stringify(TestComponent1.toString())
+      );
+      console.log('Actual TestComponent1:', JSON.stringify(parseResults1));
+      expect(parseResults1.length).toBe(1);
+      const parseResults2 = await parser.parseComponent(TestComponent2);
+      console.log(
+        'Expected TestComponent1',
+        JSON.stringify(TestComponent1.toString())
+      );
+      console.log('Actual TestComponent2:', JSON.stringify(parseResults2));
+
+      const mainDiv = parseResults1[0].div1;
+      expect('data-testid' in mainDiv).toBe(true);
     });
   });
 });
