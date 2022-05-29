@@ -302,8 +302,6 @@ export class Parser2 implements ParserI {
             childrenKey['text-as-jsx-child'] = val;
             children['children'] = childrenKey;
           }
-
-          return str;
         }
       };
 
@@ -328,6 +326,8 @@ export class Parser2 implements ParserI {
             //the stack will let us know if we are working with a jsx element or
             //if we have a text value
             const currentJsxElem = this.jsxElemStack.pop();
+            this.handleClosingBracket(str, currentJsxElem);
+            str = '';
           }
         }
 
