@@ -1,3 +1,4 @@
+/* eslint-disable no-magic-numbers */
 import React, { Component } from 'react';
 import { ParserI, BracketString, ChildList } from './types';
 const ZERO = 0;
@@ -14,11 +15,11 @@ const DONT_KEEP: BracketString = {
 
 const OPEN_BRACKETS: BracketString = {
   '{': '{',
-  '[': '[',
+  '[': '[', //means we are starting with children of current jsx elm
 };
 const CLOSE_BRACKETS: BracketString = {
   '}': '}',
-  ']': ']',
+  ']': ']', //closing children of current jsx elem.
 };
 
 const initialSplitRegex =
@@ -221,6 +222,117 @@ export class Parser2 implements ParserI {
         this.textIsJsxChild = false;
         this.jsxElemStack = [];
       }
+      handleOpeningBracket = (
+        str: string
+      ): [children: ChildList, str: string] => {
+        delete DONT_KEEP[','];
+        DONT_KEEP['"'] = '"';
+        delete OPEN_BRACKETS['"'];
+        const children: ChildList = {};
+        str = str.trim();
+
+        //we have encountered textAsJsxChild
+        if (str.includes('"')) {
+          children['text-as-jsx-child'] = str;
+          //remove the comma from our opening brackets map and add to dont keep
+
+          return [children, str];
+        } else {
+          str =
+            str && !str.includes('children:')
+              ? str.trim()
+              : str.replaceAll(replaceRegex, '');
+        }
+
+        str = str.trim();
+        if (str) {
+          children[str ? str : 'children'] = {} as ChildList;
+        }
+
+        return [children, str];
+      };
+
+      handleCommaInsideJsxElem = (str: string) => {
+        if (str.includes(':')) {
+          if (str.includes('children')) {
+            str = str.replaceAll('children:', '').trim();
+          } else {
+            const [key, val] = str.split(':');
+            const elemToAppend = Object.values(
+              this.jsxElemStack[this.jsxElemStack.length - 1]
+            )[0];
+            elemToAppend[key.trim()] = val.trim();
+          }
+        } else {
+          //we need to differentiate between jsx elems and text children
+          //if we hit a qoutation after our comma than our current str is a
+          //text child, otherwise it is jsx elem.
+          delete DONT_KEEP['"'];
+          OPEN_BRACKETS['"'] = '"';
+        }
+      };
+
+      handleClosingBracket = (str: string, children: ChildList) => {
+        DONT_KEEP[','] = ',';
+        str = str.trim();
+        let count = 1;
+        const currentJsxElemIndex = this.jsxElemStack.length - 1;
+        if (!('children' in this.jsxElemStack[currentJsxElemIndex])) {
+          this.jsxElemStack[currentJsxElemIndex]['children'] = {} as ChildList;
+        }
+
+        let currentJsxElemChildren =
+          this.jsxElemStack[currentJsxElemIndex]['children'];
+        if (str in currentJsxElemChildren) {
+          ++count;
+          str = str.replaceAll(/\d+/g, '').concat(count.toString());
+        }
+
+        if (!str) {
+          currentJsxElemChildren = { ...currentJsxElemChildren, ...children };
+        } else if (str.includes('children:')) {
+          //first array elem will be the 'children:' text
+          let [, val] = str.split(':');
+          val = val.trim();
+
+          if ('children' in children) {
+            children['children']['text-as-jsx-child'] = val;
+          } else {
+            const childrenKey: ChildList = {};
+            childrenKey['text-as-jsx-child'] = val;
+            children['children'] = childrenKey;
+          }
+
+          return str;
+        }
+      };
+
+      getChildren = (str: string, jsx: string) => {
+        const children: ChildList[] = [];
+
+        for (let i = ZERO; i < jsx.length; i++) {
+          const char = jsx.charAt(i);
+          if (char in DONT_KEEP) {
+            continue;
+          } else if (char === ',') {
+            this.handleCommaInsideJsxElem(str);
+          } else if (!(char in OPEN_BRACKETS) && !(char in CLOSE_BRACKETS)) {
+            str += char;
+          }
+
+          if (char in OPEN_BRACKETS) {
+            const [newChild, leftOverStr] = this.handleOpeningBracket(str);
+            this.jsxElemStack.push(newChild);
+            str = '';
+          } else if (char in CLOSE_BRACKETS) {
+            //the stack will let us know if we are working with a jsx element or
+            //if we have a text value
+            const currentJsxElem = this.jsxElemStack.pop();
+          }
+        }
+
+        return children;
+      };
 
       cleanComponentString = (component: () => JSX.Element) => {
         const compString = component.toString();
