@@ -7,9 +7,11 @@ import {
   getChildren,
   getJson,
 } from '../parser';
-import { Parser2, cleanComponentString as cleanComp2 } from '../parser2';
+import {
+  RefactorParser,
+  cleanComponentString as cleanComp2,
+} from '../refactorParser';
 import App from '../app';
-import { isArrEqual } from '../helpers';
 
 const ZERO = 0;
 const appTransform1 = {
@@ -74,20 +76,23 @@ const TestComponent3 = () => {
 };
 describe('testing parser', () => {
   let parser: Parser;
+  let parser2: RefactorParser;
 
   beforeEach(() => {
     parser = new Parser();
+    parser2 = new RefactorParser();
   });
   describe('testing cleanComponent method', () => {
     it('should correctly clean a component', async () => {
       const cleanStr = cleanComp1(App);
       const cleanStr2 = cleanComp2(App);
-      console.log(App.toString());
-      console.log('cleanStr', cleanStr);
-      console.log(
-        'parser1 = parser2 results: ',
-        isArrEqual(cleanStr, cleanStr2)
-      );
+      console.log('clean1', cleanStr);
+      console.log('clean2', cleanStr2);
+      //const parsed1 = await parser.parseComponent(App);
+      //const parsed2 = await parser2.parseComponent(App);
+      //console.log(App.toString());
+      //console.log('parsed1', JSON.stringify(parsed1, undefined, 2));
+      //console.log('parsed2', JSON.stringify(parsed2, undefined, 2));
 
       const results = await Promise.all(
         cleanStr.map(async (component) => getJson(component))
@@ -96,9 +101,5 @@ describe('testing parser', () => {
         '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
       );
     });
-  });
-
-  describe('testing parseComponent function', () => {
-    it('should generate a component obj', async () => {});
   });
 });
