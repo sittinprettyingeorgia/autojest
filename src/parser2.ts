@@ -14,16 +14,18 @@ const DONT_KEEP: BracketString = {
 
 const OPEN_BRACKETS: BracketString = {
   '{': '{',
+  '[': '[',
 };
 const CLOSE_BRACKETS: BracketString = {
   '}': '}',
+  ']': ']',
 };
+
 const initialSplitRegex =
   /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
 const jsxRegex =
   /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
 const initialSlice = 'return ((0, jsx_runtime_1.';
-const assignRegex = /, __assign/gi;
 const replaceRegex = /(children:)|,/gi;
 const stack: string[] = [];
 let textValueIsJsxChild = false;
@@ -104,10 +106,6 @@ export const handleOpeningBracket = async (
       children[str] =
         'children' in newChild ? newChild : { children: newChild };
     }
-  }
-
-  if (typeof newChild === 'string') {
-    propagate = true;
   }
 
   return [{ ...children }, lastIndexOfJsx, propagate];
@@ -202,35 +200,53 @@ export const getChildren = async (
 export const cleanComponentString = (component: () => JSX.Element) => {
   const compString = component.toString();
   const mainChild = compString
-    .slice(compString.indexOf(initialSlice))
     .split(initialSplitRegex)
-    .filter(Boolean)
-    .filter((item: string) => !item.startsWith(initialSlice));
-  const jsxList = mainChild.map((jsx) =>
-    jsx
-      .replaceAll(jsxRegex, '')
-      .replaceAll(assignRegex, '')
-      .slice(ZERO, jsx.indexOf(';'))
-  );
+    .filter((item: string) => {
+      return Boolean(item) && !item.startsWith(initialSlice);
+    });
+  const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
   return jsxList.map((jsx: string) => jsx.slice(ZERO, jsx.indexOf(';')));
-};
-
-export const getJson = async (jsx: string) => {
-  const [mainChild, _] = await getChildren(ZERO, '', jsx, {}); //retrieve the main child and the rest of the jsx string
-  return mainChild;
 };
 
 export class Parser2 implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<ChildList[]>;
 
   constructor() {
+    class ParserHelper {
+      textIsJsxChild: boolean;
+      jsxElemStack: ChildList[];
+      eventLogicString = '';
+
+      constructor() {
+        this.textIsJsxChild = false;
+        this.jsxElemStack = [];
+      }
+
+      cleanComponentString = (component: () => JSX.Element) => {
+        const compString = component.toString();
+        const mainChild = compString
+          .split(initialSplitRegex)
+          .filter((item: string) => {
+            return Boolean(item) && !item.startsWith(initialSlice);
+          });
+        //TODO: we should save eventLogic in case we want to attempt templates for event handling
+        this.eventLogicString = mainChild.shift();
+        const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
+        return jsxList.map((jsx: string) => jsx.slice(ZERO, jsx.indexOf(';')));
+      };
+
+      getJson = async (jsx: string) => {
+        const [mainChild, _] = await getChildren(ZERO, '', jsx, {}); //retrieve the main child and the rest of the jsx string
+        return mainChild;
+      };
+    }
     this.parseComponent = async (
       component: () => JSX.Element
     ): Promise<ChildList[]> => {
       const compString = cleanComponentString(component);
       return Promise.all(
         compString.map(async (item) => {
-          return getJson(item);
+          return new ParserHelper().getJson(item);
         })
       );
     };

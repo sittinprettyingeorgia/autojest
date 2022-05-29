@@ -3,10 +3,13 @@ import {
   Parser,
   handleClosingBracket,
   handleOpeningBracket,
-  cleanComponentString,
+  cleanComponentString as cleanComp1,
   getChildren,
   getJson,
 } from '../parser';
+import { Parser2, cleanComponentString as cleanComp2 } from '../parser2';
+import App from '../app';
+import { isArrEqual } from '../helpers';
 
 const ZERO = 0;
 const appTransform1 = {
@@ -77,12 +80,17 @@ describe('testing parser', () => {
   });
   describe('testing cleanComponent method', () => {
     it('should correctly clean a component', async () => {
-      const cleanComp = cleanComponentString(TestComponent2);
-      expect(cleanComp).toEqual(
-        '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
+      const cleanStr = cleanComp1(App);
+      const cleanStr2 = cleanComp2(App);
+      console.log(App.toString());
+      console.log('cleanStr', cleanStr);
+      console.log(
+        'parser1 = parser2 results: ',
+        isArrEqual(cleanStr, cleanStr2)
       );
+
       const results = await Promise.all(
-        cleanComp.map(async (component) => getJson(component))
+        cleanStr.map(async (component) => getJson(component))
       );
       expect(results).toEqual(
         '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
@@ -91,23 +99,6 @@ describe('testing parser', () => {
   });
 
   describe('testing parseComponent function', () => {
-    it('should generate a component obj', async () => {
-      const parseResults1 = await parser.parseComponent(TestComponent1);
-      console.log(
-        'Expected TestComponent1',
-        JSON.stringify(TestComponent1.toString())
-      );
-      console.log('Actual TestComponent1:', JSON.stringify(parseResults1));
-      expect(parseResults1.length).toBe(1);
-      const parseResults2 = await parser.parseComponent(TestComponent2);
-      console.log(
-        'Expected TestComponent1',
-        JSON.stringify(TestComponent1.toString())
-      );
-      console.log('Actual TestComponent2:', JSON.stringify(parseResults2));
-
-      const mainDiv = parseResults1[0].div1;
-      expect('data-testid' in mainDiv).toBe(true);
-    });
+    it('should generate a component obj', async () => {});
   });
 });
