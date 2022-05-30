@@ -7,10 +7,7 @@ import {
   getChildren,
   getJson,
 } from '../parser';
-import {
-  RefactorParser,
-  cleanComponentString as cleanComp2,
-} from '../refactorParser';
+import { RefactorParser } from '../refactorParser';
 import App from '../app';
 
 const ZERO = 0;
@@ -85,14 +82,12 @@ describe('testing parser', () => {
   describe('testing cleanComponent method', () => {
     it('should correctly clean a component', async () => {
       const cleanStr = cleanComp1(App);
-      const cleanStr2 = cleanComp2(App);
       console.log('clean1', cleanStr);
-      console.log('clean2', cleanStr2);
       //const parsed1 = await parser.parseComponent(App);
-      //const parsed2 = await parser2.parseComponent(App);
+      const parsed2 = await parser2.parseComponent(App);
       //console.log(App.toString());
       //console.log('parsed1', JSON.stringify(parsed1, undefined, 2));
-      //console.log('parsed2', JSON.stringify(parsed2, undefined, 2));
+      console.log('parsed2', JSON.stringify(parsed2, undefined, 2));
 
       const results = await Promise.all(
         cleanStr.map(async (component) => getJson(component))
