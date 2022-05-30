@@ -99,7 +99,6 @@ export class RefactorParser implements ParserI {
         DONT_KEEP[','] = ',';
         DONT_KEEP['"'] = '"';
         str = str ? str.trim() : str;
-        let strCount = 0;
         const keyCount = 0;
         const currentJsxElemIndex = this.jsxElemStack.length - 1;
         let parentElem: ChildList;
@@ -113,44 +112,50 @@ export class RefactorParser implements ParserI {
           ) {
             parentKey = Object.keys(this.jsxElemStack[currentJsxElemIndex])[0];
           } else {
-            parentKey = 'children';
+            parentKey = 'children' + Math.floor(Math.random() * 10);
           }
         }
-        console.log(
-          'parentElemClosingBracketSTart',
-          JSON.stringify(parentElem, undefined, 2)
-        );
 
+        let strCount = 0;
         const parentOfStrKey = Object.keys(parentOfStr)[0];
-        console.log('parentOfStrKey', parentOfStrKey);
-        /*if (
-          !parentOfStr[parentOfStrKey] ||
-          !('children' in parentOfStr[parentOfStrKey])
-        ) {
-          parentOfStr[parentOfStrKey] = {
-            ...parentOfStr[parentOfStrKey],
-            children: {} as ChildList,
-          };
-        }*/
-
         if (typeof parentOfStr !== 'string' && str && str in parentOfStr) {
           ++strCount;
           str = str.replaceAll(/\d+/g, '').concat(strCount.toString());
         }
 
         if (textChild) {
-          const child = { children: { 'text-as-jsx-child': str } };
-          parentOfStr = { ...parentOfStr, ...child };
+          if (!('children' in parentOfStr)) {
+            const child = { children: { 'text-as-jsx-child': str } };
+            parentOfStr = { ...parentOfStr, ...child };
+          } else {
+            parentOfStr['children'] = {
+              ...parentOfStr['children'],
+              'text-as-jsx-child': str,
+            };
+          }
+
           this.jsxElemStack.push(parentOfStr);
           return parentOfStr;
         } else if (!str) {
           if (parentElem) {
+            //we need to be sure parentOfStr is not overwriting parentElem[parentKey]
+            const compareVal = Object.values(parentElem)[0];
+            console.log(
+              'parentElemClosingBracketBEFORE assign parent to parent',
+              JSON.stringify(parentElem, undefined, 2)
+            );
+
+            //TODO we are deleting keys with the same name example: div replaces div etc
             parentElem[parentKey] = {
               ...parentElem[parentKey],
               ...parentOfStr,
             };
           }
-          parentElem = parentOfStr;
+          console.log(
+            'parentElemClosingBracketafter assign parent to parent',
+            JSON.stringify(parentElem, undefined, 2)
+          );
+          //parentElem = parentOfStr;
         } else if (str.includes('children:')) {
           //first array elem will be the 'children:' text
           let [, val] = str.split(':');
@@ -160,11 +165,14 @@ export class RefactorParser implements ParserI {
             ...parentOfStr[parentOfStrKey],
             ...child,
           };
-          console.log(
-            'parentElembefore addign children',
-            JSON.stringify(parentElem, undefined, 2)
-          );
-          const mainParentChild = { children: { ...parentOfStr } };
+
+          let mainParentChild;
+          if (parentKey === 'children') {
+            mainParentChild = { ...parentOfStr };
+          } else {
+            mainParentChild = { children: { ...parentOfStr } };
+          }
+
           parentElem[parentKey] = {
             ...parentElem[parentKey],
             ...mainParentChild,
@@ -204,12 +212,10 @@ export class RefactorParser implements ParserI {
           } else if (char in CLOSE_BRACKETS) {
             //the stack will let us know if we are working with a jsx element or
             //if we have a text value
-
             let currentJsxElem = this.jsxElemStack.pop();
-            const unevenJsx = jsx.substring(++i, jsx.length).indexOf('}') < 0;
+            const unevenJsx = jsx.substring(i + 1, jsx.length).indexOf('}') < 0;
 
             if (char === '"') {
-              console.log('elemWithTextAsChildFlag', currentJsxElem);
               this.handleClosingBracket(str, currentJsxElem, true);
               str = '';
             } else if (this.jsxElemStack.length === 0 || unevenJsx) {
