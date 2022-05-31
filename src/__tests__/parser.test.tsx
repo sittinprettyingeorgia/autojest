@@ -71,6 +71,21 @@ const TestComponent3 = () => {
     </div>
   );
 };
+
+export const Welcome = (props: any) => {
+  return (
+    <div>
+      <div>
+        <p>welcome paragraph</p>
+        <div>
+          <span>welcome span</span>
+        </div>
+      </div>
+      <h1>Hello, {props.name}</h1>
+    </div>
+  );
+};
+
 describe('testing parser', () => {
   let parser: Parser;
   let parser2: RefactorParser;
@@ -82,18 +97,10 @@ describe('testing parser', () => {
   describe('testing cleanComponent method', () => {
     it('should correctly clean a component', async () => {
       const cleanStr = cleanComp1(App);
-      console.log('clean1', cleanStr);
-      //const parsed1 = await parser.parseComponent(App);
       const parsed2 = await parser2.parseComponent(App);
-      //console.log(App.toString());
-      //console.log('parsed1', JSON.stringify(parsed1, undefined, 2));
-      console.log('parsed2', JSON.stringify(parsed2, undefined, 2));
-
-      const results = await Promise.all(
-        cleanStr.map(async (component) => getJson(component))
-      );
-      expect(results).toEqual(
-        '("div", __assign({ "data-testid": "div1" }, { children: [(0, jsx_runtime_1.jsx)("p", { children: "We have a paragraph1." }), (0, jsx_runtime_1.jsx)("span", { children: "1" }), (0, jsx_runtime_1.jsx)("span", { children: "2" }), (0, jsx_runtime_1.jsx)("span", { children: "3" })] })))'
+      console.log('parse results:', parsed2);
+      expect(parsed2).toBe(
+        '[{"div": {"children": {"div1": {"children": {"p1": {"children": {"text-as-jsx-child": "This is div1 paragraph"}, "onClick2": "handleClick1"}}, "data-testid": "div1", "onClick1": "handleClick1"}, "div2": {"children": {"button": {"children": {"text-as-jsx-child": "change state1"}, "onClick3": "handleClick1"}, "p2": {"children": {"span": {"children": {"text-as-jsx-child": "This is a span1"}}, "text-as-jsx-child": "This is div2 paragraph.1"}}}, "data-testid1": "div2"}}, "onChange": "handleClick1", "onClick": "handleClick1", "onMouseEnter": "handleClick1"}}, {"react_1.Fragment": {"div1": {"children": {"button": {"children": {"text-as-jsx-child": "change state 3"}, "onClick": "handleClick2"}, "p1": {"children": {"span": {"children": {"text-as-jsx-child": "This is a span3"}}, "text-as-jsx-child": "This is a paragraph3.1"}}}, "data-testid": "div3"}}}]'
       );
     });
   });

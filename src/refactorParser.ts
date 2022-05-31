@@ -1,6 +1,12 @@
 /* eslint-disable no-magic-numbers */
 import { ParserI, BracketString, ChildList, ElemMap } from './types';
-import { getUniqueElemName } from 'helpers';
+
+const initialSplitRegex =
+  /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
+const jsxRegex =
+  /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
+const initialSlice = 'return ((0, jsx_runtime_1.';
+const replaceRegex = /(children:)|,/gi;
 export class RefactorParser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<ChildList[]>;
   cleanComponentString: (component: () => JSX.Element) => string[];
@@ -18,8 +24,6 @@ export class RefactorParser implements ParserI {
         this.elemNameMap = {};
       }
 
-      ZERO = 0;
-      NEG_ONE = -1;
       DONT_KEEP: BracketString = {
         '(': '(',
         ')': ')',
@@ -35,19 +39,16 @@ export class RefactorParser implements ParserI {
         '}': '}',
         ']': ']', //closing children of current jsx elem.
       };
-      initialSplitRegex =
-        /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
-      jsxRegex =
-        /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
-      initialSlice = 'return ((0, jsx_runtime_1.';
-      replaceRegex = /(children:)|,/gi;
 
       getUniqueElemName = (elemName: string) => {
         elemName = elemName.trim();
-        let count = 0;
-        while (elemName in this.elemNameMap) {
-          ++count;
-          elemName = elemName.replaceAll(/\d+/g, '').concat(count.toString());
+        if (!elemName) return;
+
+        if (elemName in this.elemNameMap) {
+          const count = this.elemNameMap[elemName]++;
+          elemName += count.toString();
+        } else {
+          this.elemNameMap[elemName] = 1;
         }
 
         return elemName;
@@ -70,7 +71,7 @@ export class RefactorParser implements ParserI {
           str =
             str && !str.includes('children:')
               ? str.trim()
-              : str.replaceAll(this.replaceRegex, '');
+              : str.replaceAll(replaceRegex, '');
         }
 
         str = str.trim();
@@ -87,7 +88,9 @@ export class RefactorParser implements ParserI {
         if (str.includes('children')) {
           str = str.replaceAll('children:', '').trim();
         } else {
-          const [key, val] = str.split(':');
+          // eslint-disable-next-line prefer-const
+          let [key, val] = str.split(':');
+          key = this.getUniqueElemName(key);
           const elemToAppend = Object.values(
             this.jsxElemStack[this.jsxElemStack.length - 1]
           )[0];
@@ -122,7 +125,7 @@ export class RefactorParser implements ParserI {
           ) {
             parentKey = Object.keys(this.jsxElemStack[currentJsxElemIndex])[0];
           } else {
-            parentKey = 'children' + Math.floor(Math.random() * 10);
+            parentKey = 'children';
           }
         }
 
@@ -209,7 +212,6 @@ export class RefactorParser implements ParserI {
               ...parentOfStr,
             };
           }
-          parentElem = parentOfStr;
         } else if (str.includes('children:')) {
           parentOfStr = this.getParentOfStr(str, parentOfStrKey, parentOfStr);
           const mainParentChild = this.getMainParentChild(
@@ -222,6 +224,7 @@ export class RefactorParser implements ParserI {
             mainParentChild
           );
         }
+
         return parentElem;
       };
 
@@ -234,21 +237,22 @@ export class RefactorParser implements ParserI {
       ): [children: ChildList, str: string] => {
         let currentJsxElem = this.jsxElemStack.pop();
         const unevenJsx = jsx.substring(i + 1, jsx.length).indexOf('}') < 0;
+        let newChildren: ChildList;
 
         if (char === '"') {
-          this.handleClosingBracket(str, currentJsxElem, true);
+          newChildren = this.handleClosingBracket(str, currentJsxElem, true);
           str = '';
         } else if (this.jsxElemStack.length === 0 || unevenJsx) {
           if (unevenJsx) {
-            this.handleClosingBracket(str, currentJsxElem);
+            newChildren = this.handleClosingBracket(str, currentJsxElem);
             currentJsxElem = this.jsxElemStack.pop();
           }
-          children = this.handleClosingBracket(str, currentJsxElem);
+          newChildren = this.handleClosingBracket(str, currentJsxElem);
         } else {
-          this.handleClosingBracket(str, currentJsxElem);
+          newChildren = this.handleClosingBracket(str, currentJsxElem);
           str = '';
         }
-
+        children = newChildren ? newChildren : children;
         return [children, str];
       };
 
@@ -261,6 +265,7 @@ export class RefactorParser implements ParserI {
           next = true;
         } else if (char === ',') {
           str = this.handleCommaInsideJsxElem(str);
+          str = str ? this.getUniqueElemName(str) : str;
         } else if (
           !(char in this.OPEN_BRACKETS) &&
           !(char in this.CLOSE_BRACKETS)
@@ -275,7 +280,7 @@ export class RefactorParser implements ParserI {
         let children: ChildList = {};
         let str = '';
 
-        for (let i = this.ZERO; i < jsx.length; i++) {
+        for (let i = 0; i < jsx.length; i++) {
           const char = jsx.charAt(i);
           const [newCharStr, next] = this.handleChar(char, str);
           if (next) {
@@ -304,6 +309,7 @@ export class RefactorParser implements ParserI {
             );
 
             children = newChildren;
+            console.log('handle closing bracket childre', children);
             str = newStr;
           }
         }
@@ -311,8 +317,9 @@ export class RefactorParser implements ParserI {
         return children;
       };
 
-      getJson = async (jsx: string) => {
+      getJson = (jsx: string) => {
         const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
+        console.log('mainChild', mainChild);
         return mainChild;
       };
     }
@@ -327,21 +334,18 @@ export class RefactorParser implements ParserI {
       //TODO: we should save eventLogic in case we want to attempt templates for event handling
       const eventLogicString = mainChild.shift();
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      return jsxList.map((jsx: string) => jsx.slice(ZERO, jsx.indexOf(';')));
+      return jsxList.map((jsx: string) => jsx.slice(0, jsx.indexOf(';')));
     };
 
     this.parseComponent = async (
       component: () => JSX.Element
     ): Promise<ChildList[]> => {
       const compString = this.cleanComponentString(component);
-      const results: ChildList[] = [];
-      results.push(new ParserHelper().getJson(compString[0]));
-      return results;
-      /*return Promise.all(
-        /*compString.map(async (item) => {
+      return Promise.all(
+        compString.map(async (item) => {
           return new ParserHelper().getJson(item);
         })
-      );*/
+      );
     };
   }
 }
