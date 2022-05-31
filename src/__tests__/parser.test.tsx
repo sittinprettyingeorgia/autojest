@@ -3,7 +3,7 @@ import {
   DeprecatedParser,
   cleanComponentString as cleanComp1,
 } from '../DeprecatedParser';
-import { Parser } from '../Parser';
+import Parser from '../Parser';
 import App from '../app';
 
 const TestComponent1 = () => {
