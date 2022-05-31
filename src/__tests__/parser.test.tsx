@@ -7,7 +7,7 @@ import {
   getChildren,
   getJson,
 } from '../parser';
-import { RefactorParser } from '../refactorParser';
+import { Parser2 } from '../Parser2';
 import App from '../app';
 
 const ZERO = 0;
@@ -88,11 +88,11 @@ export const Welcome = (props: any) => {
 
 describe('testing parser', () => {
   let parser: Parser;
-  let parser2: RefactorParser;
+  let parser2: Parser2;
 
   beforeEach(() => {
     parser = new Parser();
-    parser2 = new RefactorParser();
+    parser2 = new Parser2();
   });
   describe('testing cleanComponent method', () => {
     it('should correctly clean a component', async () => {

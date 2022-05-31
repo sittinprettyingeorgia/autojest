@@ -7,7 +7,7 @@ const jsxRegex =
   /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
 const initialSlice = 'return ((0, jsx_runtime_1.';
 const replaceRegex = /(children:)|,/gi;
-export class RefactorParser implements ParserI {
+export class Parser2 implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<ChildList[]>;
   cleanComponentString: (component: () => JSX.Element) => string[];
 
