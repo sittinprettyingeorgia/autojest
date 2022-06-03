@@ -8,8 +8,10 @@ const jsxRegex =
 const initialSlice = 'return ((0, jsx_runtime_1.';
 const replaceRegex = /(children:)|,/gi;
 class Parser implements ParserI {
-  parseComponent: (component: () => JSX.Element) => Promise<ChildList[]>;
-  cleanComponentString: (component: () => JSX.Element) => string[];
+  parseComponent: (
+    component: (props?: any) => JSX.Element
+  ) => Promise<ChildList[]>;
+  cleanComponent: (component: (props?: any) => JSX.Element) => string[];
 
   constructor() {
     class ParserHelper {
@@ -322,7 +324,7 @@ class Parser implements ParserI {
       };
     }
 
-    this.cleanComponentString = (component: () => JSX.Element) => {
+    this.cleanComponent = (component: () => JSX.Element) => {
       const compString = component.toString();
       const mainChild = compString
         .split(initialSplitRegex)
@@ -332,13 +334,17 @@ class Parser implements ParserI {
       //TODO: we should save eventLogic in case we want to attempt templates for event handling
       const eventLogicString = mainChild.shift();
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      return jsxList.map((jsx: string) => jsx.slice(0, jsx.indexOf(';')));
+      const result = jsxList.map((jsx: string) =>
+        jsx.slice(0, jsx.indexOf(';'))
+      );
+
+      return result;
     };
 
     this.parseComponent = async (
-      component: () => JSX.Element
+      component: (props?: any) => JSX.Element
     ): Promise<ChildList[]> => {
-      const compString = this.cleanComponentString(component);
+      const compString = this.cleanComponent(component);
       return Promise.all(
         compString.map(async (item) => {
           return new ParserHelper().getJson(item);
