@@ -213,6 +213,8 @@ class Parser implements ParserI {
               ...parentElem[parentKey],
               ...parentOfStr,
             };
+          } else {
+            parentElem = parentOfStr;
           }
         } else if (str.includes('children:')) {
           parentOfStr = this.getParentOfStr(str, parentOfStrKey, parentOfStr);
@@ -241,7 +243,9 @@ class Parser implements ParserI {
         const unevenJsx = jsx.substring(i + 1, jsx.length).indexOf('}') < 0;
         let newChildren: ChildList;
 
-        if (char === '"') {
+        if (char === '"' || (char === ']' && str)) {
+          //CHANGED::
+          //adding close bracket breaks things
           newChildren = this.handleClosingBracket(str, currentJsxElem, true);
           str = '';
         } else if (this.jsxElemStack.length === 0 || unevenJsx) {

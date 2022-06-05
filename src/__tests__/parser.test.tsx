@@ -99,7 +99,7 @@ const TestComponent3 = () => {
   );
 };
 
-export const WelcomeTest = (props: any) => {
+const WelcomeTest = (props: any) => {
   return (
     <div>
       <div>
@@ -109,6 +109,14 @@ export const WelcomeTest = (props: any) => {
         </div>
       </div>
       <h1>Hello, {props.name}</h1>
+    </div>
+  );
+};
+
+const SimpleTextOutsideJsx = () => {
+  return (
+    <div>
+      <p>inside</p>outside
     </div>
   );
 };
@@ -124,6 +132,10 @@ const cleanTestAppTestResult = [
 
 const cleanTestWelcomeTest = [
   '"div", { children: ["div", { children: ["p", { children: "welcome" }), "paragraph", "div", { children: ["span", { children: "welcome span" }), "outside text"] })] }), "h1", { children: ["Hello, ", props.name] })] }))',
+];
+
+const testCleanSimpleTextOutsideJsx = [
+  '"div", { children: ["p", { children: "inside" }), "outside"] }))',
 ];
 
 const testParseComp2TestResult = [
@@ -216,6 +228,17 @@ const testParseAppTestResult = [
   },
 ];
 
+const testParseSimpleTextOutsideJsx = [
+  {
+    div: {
+      children: {
+        p1: { children: { 'text-as-jsx-child': 'inside' } },
+        'text-as-jsx-child': 'outside',
+      },
+    },
+  },
+];
+
 describe('testing parser', () => {
   let parser: Parser;
 
@@ -231,23 +254,27 @@ describe('testing parser', () => {
       const results = parser.cleanComponent(TestApp);
       expect(results).toEqual(cleanTestAppTestResult);
     });
-    it('should correctly parse a functional component with text outside of immediate jsx', async () => {
-      const textOutsideJsxComponent = parser.cleanComponent(WelcomeTest);
-      expect(textOutsideJsxComponent).toEqual(cleanTestWelcomeTest);
+    it('should correctly clean a functional component with text outside of immediate jsx', async () => {
+      const textOutsideJsxComponent =
+        parser.cleanComponent(SimpleTextOutsideJsx);
+      expect(textOutsideJsxComponent).toEqual(testCleanSimpleTextOutsideJsx);
     });
   });
   describe('testing parseComponent method', () => {
-    /*it('should correctly parse a simple functional component', async () => {
+    it('should correctly parse a simple functional component', async () => {
       const simpleComponent = await parser.parseComponent(TestComponent2);
-      expect(simpleComponent).toEqual(testComp2TestResult);
+      expect(simpleComponent).toEqual(testParseComp2TestResult);
     });
     it('should correctly parse a conditional rendering functional component', async () => {
       const results = await parser.parseComponent(TestApp);
-      expect(results).toEqual(testAppTestResult);
+      console.log('results', JSON.stringify(results, undefined, 2));
+      expect(results).toEqual(testParseAppTestResult);
     });
     it('should correctly parse a functional component with text outside of immediate jsx', async () => {
-      const textOutsideJsxComponent = await parser.parseComponent(WelcomeTest);
-      expect(textOutsideJsxComponent).toEqual(testAppTestResult);
-    });*/
+      const textOutsideJsxComponent = await parser.parseComponent(
+        SimpleTextOutsideJsx
+      );
+      expect(textOutsideJsxComponent).toEqual(testParseSimpleTextOutsideJsx);
+    });
   });
 });
