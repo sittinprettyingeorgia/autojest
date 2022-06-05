@@ -202,6 +202,10 @@ class Parser implements ParserI {
         this.DONT_KEEP['"'] = '"';
         // eslint-disable-next-line prefer-const
         let [parentElem, parentKey] = this.getParentElemAndKey();
+        console.log('parentElem', parentElem);
+        console.log('str', str);
+        console.log('parentofSTr:', parentOfStr);
+        console.log('textChild', textChild);
         const parentOfStrKey = Object.keys(parentOfStr)[0];
         str = this.getUniqueElemName(str);
 
@@ -214,6 +218,9 @@ class Parser implements ParserI {
               ...parentOfStr,
             };
           }
+
+          parentElem = parentOfStr; //if there is no parentElem we need to assign
+          //parentOfStr as parentElem to complete the jsx element enclosing object.
         } else if (str.includes('children:')) {
           parentOfStr = this.getParentOfStr(str, parentOfStrKey, parentOfStr);
           const mainParentChild = this.getMainParentChild(
@@ -242,6 +249,9 @@ class Parser implements ParserI {
         let newChildren: ChildList;
 
         if (char === '"' || char === ']') {
+          if (char === ']') {
+            console.log('stack sixe', this.jsxElemStack.length);
+          }
           newChildren = this.handleClosingBracket(str, currentJsxElem, true);
           str = '';
         } else if (this.jsxElemStack.length === 0 || unevenJsx) {
