@@ -17,3 +17,6 @@ export interface FormatterI {
 export interface FileWriterI {
   writeFile: () => void;
 }
+export interface ElemMap {
+  [key: string]: number;
+}

@@ -6,7 +6,7 @@ import {
   FileWriterI,
 } from './types';
 import React from 'react';
-import { Parser } from './parser';
+import Parser from './parser';
 /**
  * The AutoJestFactory class is a singleton
  * that handles returning an autoJest singleton instance.
