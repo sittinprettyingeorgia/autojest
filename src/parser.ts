@@ -202,10 +202,6 @@ class Parser implements ParserI {
         this.DONT_KEEP['"'] = '"';
         // eslint-disable-next-line prefer-const
         let [parentElem, parentKey] = this.getParentElemAndKey();
-        console.log('parentElem', parentElem);
-        console.log('str', str);
-        console.log('parentofSTr:', parentOfStr);
-        console.log('textChild', textChild);
         const parentOfStrKey = Object.keys(parentOfStr)[0];
         str = this.getUniqueElemName(str);
 
@@ -217,10 +213,9 @@ class Parser implements ParserI {
               ...parentElem[parentKey],
               ...parentOfStr,
             };
+          } else {
+            parentElem = parentOfStr;
           }
-
-          parentElem = parentOfStr; //if there is no parentElem we need to assign
-          //parentOfStr as parentElem to complete the jsx element enclosing object.
         } else if (str.includes('children:')) {
           parentOfStr = this.getParentOfStr(str, parentOfStrKey, parentOfStr);
           const mainParentChild = this.getMainParentChild(
@@ -248,10 +243,9 @@ class Parser implements ParserI {
         const unevenJsx = jsx.substring(i + 1, jsx.length).indexOf('}') < 0;
         let newChildren: ChildList;
 
-        if (char === '"' || char === ']') {
-          if (char === ']') {
-            console.log('stack sixe', this.jsxElemStack.length);
-          }
+        if (char === '"' || (char === ']' && str)) {
+          //CHANGED::
+          //adding close bracket breaks things
           newChildren = this.handleClosingBracket(str, currentJsxElem, true);
           str = '';
         } else if (this.jsxElemStack.length === 0 || unevenJsx) {
@@ -330,7 +324,6 @@ class Parser implements ParserI {
 
       getJson = (jsx: string) => {
         const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
-        console.log('mainChild', JSON.stringify(mainChild, undefined, 2));
         return mainChild;
       };
     }
