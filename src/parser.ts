@@ -241,7 +241,7 @@ class Parser implements ParserI {
         const unevenJsx = jsx.substring(i + 1, jsx.length).indexOf('}') < 0;
         let newChildren: ChildList;
 
-        if (char === '"') {
+        if (char === '"' || char === ']') {
           newChildren = this.handleClosingBracket(str, currentJsxElem, true);
           str = '';
         } else if (this.jsxElemStack.length === 0 || unevenJsx) {
@@ -320,6 +320,7 @@ class Parser implements ParserI {
 
       getJson = (jsx: string) => {
         const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
+        console.log('mainChild', JSON.stringify(mainChild, undefined, 2));
         return mainChild;
       };
     }
