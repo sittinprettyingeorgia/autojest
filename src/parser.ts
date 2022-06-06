@@ -323,12 +323,22 @@ class Parser implements ParserI {
       };
 
       getJson = (jsx: string) => {
-        const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
-        return mainChild;
+        //const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
+        const newStr = '{' + jsx + '}';
+        let jsonStr = newStr.replaceAll(')', '');
+        jsonStr = jsonStr.replaceAll('(', '');
+        jsonStr = jsonStr.replace(',', ':');
+        jsonStr = jsonStr.replaceAll('children', '"children"');
+
+        console.log('result', jsonStr);
+        const json = JSON.parse(jsonStr); //YAY IT WORKS
+        console.log('result json', Object.values(json));
+        return json;
       };
     }
 
     this.cleanComponent = (component: () => JSX.Element) => {
+      //TODO cleanComponent should convert our component into a string that can be converted into a json obj
       const compString = component.toString();
       const mainChild = compString
         .split(initialSplitRegex)
