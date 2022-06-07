@@ -8,11 +8,6 @@ const jsxRegex =
 const initialSlice = 'return ((0, jsx_runtime_1.';
 const replaceRegex = /(children:)|,/gi;
 class Parser implements ParserI {
-  parseComponent: (
-    component: (props?: any) => JSX.Element
-  ) => Promise<ChildList[]>;
-  cleanComponent: (component: (props?: any) => JSX.Element) => string[];
-
   constructor() {
     class ParserHelper {
       textIsJsxChild: boolean;
@@ -322,50 +317,57 @@ class Parser implements ParserI {
         return children;
       };
 
-      getJson = (jsx: string) => {
-        //const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
-        const newStr = '{' + jsx + '}';
-        let jsonStr = newStr.replaceAll(')', '');
-        jsonStr = jsonStr.replaceAll('(', '');
-        jsonStr = jsonStr.replace(',', ':');
-        jsonStr = jsonStr.replaceAll('children', '"children"');
+      getTestObject = (jsx: string): ChildList => {
+        const parentJsx: ChildList = {};
+        return parentJsx;
+      };
 
-        console.log('result', jsonStr);
-        const json = JSON.parse(jsonStr); //YAY IT WORKS
-        console.log('result json', Object.values(json));
-        return json;
+      getJson = (jsx: string): ChildList => {
+        const mainChild = this.getChildren(jsx); //retrieve the main child and the rest of the jsx string
+        return mainChild;
       };
     }
-
-    this.cleanComponent = (component: () => JSX.Element) => {
-      //TODO cleanComponent should convert our component into a string that can be converted into a json obj
-      const compString = component.toString();
-      const mainChild = compString
-        .split(initialSplitRegex)
-        .filter((item: string) => {
-          return Boolean(item) && !item.startsWith(initialSlice);
-        });
-      //TODO: we should save eventLogic in case we want to attempt templates for event handling
-      const eventLogicString = mainChild.shift();
-      const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      const result = jsxList.map((jsx: string) =>
-        jsx.slice(0, jsx.indexOf(';'))
-      );
-
-      return result;
-    };
 
     this.parseComponent = async (
       component: (props?: any) => JSX.Element
     ): Promise<ChildList[]> => {
-      const compString = this.cleanComponent(component);
+      const compJson = this.cleanComponent(component);
       return Promise.all(
-        compString.map(async (item) => {
-          return new ParserHelper().getJson(item);
+        compJson.map(async (item) => {
+          return new ParserHelper().getTestObject(item);
         })
       );
     };
   }
+
+  convertToJson = (jsx: string): string => {
+    jsx = jsx.slice(0, jsx.indexOf(';'));
+    const newStr = '{' + jsx + '}';
+    let jsonStr = newStr.replaceAll('(', '');
+    jsonStr = newStr.replaceAll(')', '');
+    jsonStr = jsonStr.replace(',', ':');
+    jsonStr = jsonStr.replaceAll('children', '"children"');
+    return JSON.parse(jsonStr);
+  };
+
+  cleanComponent = (component: () => JSX.Element): string[] => {
+    const compString = component.toString();
+    const mainChild = compString
+      .split(initialSplitRegex)
+      .filter((item: string) => {
+        return Boolean(item) && !item.startsWith(initialSlice);
+      });
+
+    //TODO: we should save eventLogic in case we want to attempt templates for event handling results
+    const eventLogicString = mainChild.shift();
+    const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
+
+    const result = jsxList.map((jsx: string) => {
+      return this.convertToJson(jsx);
+    });
+
+    return result;
+  };
 }
 
 export default Parser;

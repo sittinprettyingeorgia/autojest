@@ -20,3 +20,23 @@ export interface FileWriterI {
 export interface ElemMap {
   [key: string]: number;
 }
+export type Event = {
+  elemName: string; // div, p, span etc.
+  onClick?: boolean;
+  onChange?: boolean;
+  onMouseOver?: boolean;
+  onMouseDown?: boolean;
+  onMouseOut?: boolean;
+  onKeyDown?: boolean;
+  onKeyPress?: boolean;
+  onBlur?: boolean;
+  onInput?: boolean;
+};
+export interface TestObject {
+  jsx?: string[];
+  placeholder?: string[];
+  label?: string[];
+  alt?: string[];
+  title?: string[];
+  events?: Event[];
+}
