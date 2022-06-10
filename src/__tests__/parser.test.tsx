@@ -197,7 +197,7 @@ describe('testing parser', () => {
     parser = new Parser();
   });
   describe('testing cleanComponent method', () => {
-    /*it('should correctly clean a simple functional component', async () => {
+    it('should correctly clean a simple functional component', async () => {
       let results = parser.cleanComponent(TestComponent2);
       expect(results).toEqual(cleanComp2TestResult);
     });
@@ -209,7 +209,7 @@ describe('testing parser', () => {
     it('should correctly clean a functional component with text outside of immediate jsx', async () => {
       const results = parser.cleanComponent(SimpleTextOutsideJsx);
       expect(results).toEqual(testCleanSimpleTextOutsideJsx);
-    });*/
+    });
     it('should correctly clean a functional component with text outside of immediate jsx and placeholder text', async () => {
       const results = parser.cleanComponent(SimpleWithPlaceholderText);
       expect(results).toEqual(testCleanSimpleWithPlaceholderText);
