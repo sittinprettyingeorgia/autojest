@@ -122,8 +122,12 @@ const SimpleTextOutsideJsx = () => {
 };
 
 const SimpleWithPlaceholderText = () => {
+  const handleClick1 = () => {
+    return;
+  };
+
   return (
-    <div>
+    <div onClick={handleClick1}>
       <p>inside</p>outside
       <input type="text" placeholder="test placeholder" />
     </div>
@@ -186,6 +190,7 @@ const testCleanSimpleWithPlaceholderText = [
           placeholder: 'test placeholder',
         },
       ],
+      onClick: 'handleClick1',
     },
   },
 ];
@@ -197,22 +202,21 @@ describe('testing parser', () => {
     parser = new Parser();
   });
   describe('testing cleanComponent method', () => {
-    it('should correctly clean a simple functional component', async () => {
-      let results = parser.cleanComponent(TestComponent2);
+    /*it('should correctly clean a simple functional component', async () => {
+      const results = parser.cleanComponent(TestComponent2);
       expect(results).toEqual(cleanComp2TestResult);
-    });
-    it.skip('should correctly clean a conditional rendering functional component', async () => {
-      //toEqual comparison fails for unknown reason
+    });*/
+    it('should correctly clean a conditional rendering functional component', async () => {
       const results = parser.cleanComponent(TestApp);
       expect(results).toEqual(cleanTestAppTestResult);
     });
-    it('should correctly clean a functional component with text outside of immediate jsx', async () => {
+    /*it('should correctly clean a functional component with text outside of immediate jsx', async () => {
       const results = parser.cleanComponent(SimpleTextOutsideJsx);
       expect(results).toEqual(testCleanSimpleTextOutsideJsx);
     });
     it('should correctly clean a functional component with text outside of immediate jsx and placeholder text', async () => {
       const results = parser.cleanComponent(SimpleWithPlaceholderText);
       expect(results).toEqual(testCleanSimpleWithPlaceholderText);
-    });
+    });*/
   });
 });

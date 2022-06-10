@@ -27,14 +27,11 @@ class Parser implements ParserI {
 
       /*traverseJsonObj = (
         parentJsxName: string,
-        parentJsxVal: any,
+        parentJsxVal: string | (string | Record<string, unknown>)[],
         isChildren: boolean
-      ) => {
-        if (isChildren && typeof parentJsx === 'string') {
-          this.testObject.return;
-        }
-
+      ) => 
         for (const [key, val] of Object.entries(parentJsx)) {
+
         }
       };*/
 
@@ -57,14 +54,23 @@ class Parser implements ParserI {
     };
   }
 
+  //regex may not be the answer. too many edge cases
   convertToJson = (jsx: string): Record<string, unknown> => {
-    const attrRegex = /((([a-zA-Z]+)(\s)*(:)))(\s)*?([,]?)/gi;
+    const cleanRegex = /((([a-zA-Z0-9_.-]+)(\s)*(:)))(\s)*?([,]?)/gi;
+    const washRegex = /((?<=(: ))[a-zA-Z0-9_-]+(?!"))/gi;
+    const jsxVsJsxsRegex =
+      /((?<=("children": ))[a-zA-Z0-9_",\s:-]+[{]+[a-zA-Z0-9_",\s:-]+[}])/gi;
     const parentheses = /[)(]+/gi;
     jsx = jsx.slice(0, jsx.indexOf(';'));
     const newStr = '{' + jsx + '}';
     let jsonStr = newStr.replaceAll(parentheses, '');
     jsonStr = jsonStr.replace(',', ':');
-    jsonStr = jsonStr.replaceAll(attrRegex, '"$3":');
+    jsonStr = jsonStr.replaceAll(cleanRegex, '"$3":');
+    jsonStr = jsonStr.replaceAll(washRegex, '"$1"');
+    jsonStr = jsonStr.replaceAll(jsxVsJsxsRegex, '[$1]');
+    console.log('full', jsonStr);
+    console.log('slice', jsonStr.slice(250, jsonStr.length));
+
     return JSON.parse(jsonStr);
   };
 
@@ -75,11 +81,13 @@ class Parser implements ParserI {
       .filter((item: string) => {
         return Boolean(item) && !item.startsWith(initialSlice);
       });
-
+    console.log('mainChild', mainChild);
     //TODO: we should save eventLogic in case we want to attempt templates for event handling results
     const eventLogicString = mainChild.shift();
     const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
+    console.log('before conversion', jsxList);
 
+    //return [this.convertToJson(jsxList[1])];
     const result = jsxList.map((jsx: string) => {
       return this.convertToJson(jsx);
     });
