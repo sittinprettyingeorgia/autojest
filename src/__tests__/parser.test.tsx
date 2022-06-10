@@ -121,6 +121,15 @@ const SimpleTextOutsideJsx = () => {
   );
 };
 
+const SimpleWithPlaceholderText = () => {
+  return (
+    <div>
+      <p>inside</p>outside
+      <input type="text" placeholder="test placeholder" />
+    </div>
+  );
+};
+
 const cleanComp2TestResult = [
   {
     div: {
@@ -162,103 +171,21 @@ const testCleanSimpleTextOutsideJsx = [
   },
 ];
 
-const testParseComp2TestResult = [
+const testCleanSimpleWithPlaceholderText = [
   {
     div: {
-      'data-testid': 'div1',
-      children: {
-        p1: {
-          children: {
-            'text-as-jsx-child': 'We have a paragraph1.',
-          },
+      children: [
+        'p',
+        {
+          children: 'inside',
         },
-        span: {
-          children: {
-            'text-as-jsx-child': '1',
-          },
+        'outside',
+        'input',
+        {
+          type: 'text',
+          placeholder: 'test placeholder',
         },
-        span1: {
-          children: {
-            'text-as-jsx-child': '2',
-          },
-        },
-        span2: {
-          children: {
-            'text-as-jsx-child': '3',
-          },
-        },
-      },
-    },
-  },
-];
-
-const testParseAppTestResult = [
-  {
-    div: {
-      children: {
-        div1: {
-          children: {
-            p1: {
-              children: { 'text-as-jsx-child': 'This is div1 paragraph' },
-              onClick2: 'handleClick1',
-            },
-          },
-          'data-testid': 'div1',
-          onClick1: 'handleClick1',
-        },
-        div2: {
-          children: {
-            button: {
-              children: { 'text-as-jsx-child': 'change state1' },
-              onClick3: 'handleClick1',
-            },
-            p2: {
-              children: {
-                span: {
-                  children: { 'text-as-jsx-child': 'This is a span1' },
-                },
-                'text-as-jsx-child': 'This is div2 paragraph.1',
-              },
-            },
-          },
-          'data-testid1': 'div2',
-        },
-      },
-      onChange: 'handleClick1',
-      onClick: 'handleClick1',
-      onMouseEnter: 'handleClick1',
-    },
-  },
-  {
-    'react_1.Fragment': {
-      div1: {
-        children: {
-          button: {
-            children: { 'text-as-jsx-child': 'change state 3' },
-            onClick: 'handleClick2',
-          },
-          p1: {
-            children: {
-              span: {
-                children: { 'text-as-jsx-child': 'This is a span3' },
-              },
-              'text-as-jsx-child': 'This is a paragraph3.1',
-            },
-          },
-        },
-        'data-testid': 'div3',
-      },
-    },
-  },
-];
-
-const testParseSimpleTextOutsideJsx = [
-  {
-    div: {
-      children: {
-        p1: { children: { 'text-as-jsx-child': 'inside' } },
-        'text-as-jsx-child': 'outside',
-      },
+      ],
     },
   },
 ];
@@ -270,31 +197,22 @@ describe('testing parser', () => {
     parser = new Parser();
   });
   describe('testing cleanComponent method', () => {
-    it('should correctly clean a simple functional component', async () => {
+    /*it('should correctly clean a simple functional component', async () => {
       let results = parser.cleanComponent(TestComponent2);
       expect(results).toEqual(cleanComp2TestResult);
     });
     it.skip('should correctly clean a conditional rendering functional component', async () => {
+      //toEqual comparison fails for unknown reason
       const results = parser.cleanComponent(TestApp);
       expect(results).toEqual(cleanTestAppTestResult);
     });
     it('should correctly clean a functional component with text outside of immediate jsx', async () => {
       const results = parser.cleanComponent(SimpleTextOutsideJsx);
       expect(results).toEqual(testCleanSimpleTextOutsideJsx);
-    });
-  });
-  describe('testing getJson method', () => {
-    /*it('should correctly parse a simple functional component', async () => {
-      const results = await parser.parseComponent(TestComponent2);
-      expect(results).toEqual(testParseComp2TestResult);
-    });
-    it('should correctly parse a conditional rendering functional component', async () => {
-      const results = await parser.parseComponent(TestApp);
-      expect(results).toEqual(testParseAppTestResult);
-    });
-    it('should correctly parse a functional component with text outside of immediate jsx', async () => {
-      const results = await parser.parseComponent(SimpleTextOutsideJsx);
-      expect(results).toEqual(testParseSimpleTextOutsideJsx);
     });*/
+    it('should correctly clean a functional component with text outside of immediate jsx and placeholder text', async () => {
+      const results = parser.cleanComponent(SimpleWithPlaceholderText);
+      expect(results).toEqual(testCleanSimpleWithPlaceholderText);
+    });
   });
 });

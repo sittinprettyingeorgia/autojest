@@ -20,7 +20,16 @@ export interface FileWriterI {
 export interface ElemMap {
   [key: string]: number;
 }
-export type Event = {
+
+/**
+ * ChildrenType is the object referenced by the children key
+ * within an object returned by the cleanComponent method.
+ */
+export type ChildrenType = {
+  children: (string | object)[];
+};
+
+export type AttributeType = {
   elemName: string; // div, p, span etc.
   onClick?: boolean;
   onChange?: boolean;
@@ -31,12 +40,21 @@ export type Event = {
   onKeyPress?: boolean;
   onBlur?: boolean;
   onInput?: boolean;
+  'data-testid'?: string;
+  role?: string;
 };
-export interface TestObject {
-  jsx?: string[];
-  placeholder?: string[];
-  label?: string[];
-  alt?: string[];
-  title?: string[];
-  events?: Event[];
-}
+export type Attribute = {
+  [key in keyof AttributeType]: string | boolean;
+};
+
+export type TestObjectType = {
+  jsxText?: string[];
+  placeholderText?: string[];
+  labelText?: string[];
+  altText?: string[];
+  titleText?: string[];
+  events?: Attribute[];
+};
+export type TestObject = {
+  [key in keyof TestObjectType]: string[] | Event[];
+};
