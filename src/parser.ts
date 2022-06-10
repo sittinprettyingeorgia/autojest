@@ -13,7 +13,7 @@ const initialSplitRegex =
 const jsxRegex =
   /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
 const initialSlice = 'return ((0, jsx_runtime_1.';
-const replaceRegex = /(children:)|,/gi;
+
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => ChildList;
 
@@ -57,15 +57,14 @@ class Parser implements ParserI {
     };
   }
 
-  convertToJson = (jsx: string): any => {
+  convertToJson = (jsx: string): Record<string, unknown> => {
     const attrRegex = /((([a-zA-Z]+)(\s)*(:)))(\s)*?([,]?)/gi;
     const parentheses = /[)(]+/gi;
     jsx = jsx.slice(0, jsx.indexOf(';'));
     const newStr = '{' + jsx + '}';
     let jsonStr = newStr.replaceAll(parentheses, '');
     jsonStr = jsonStr.replace(',', ':');
-    jsonStr = jsonStr.replace(attrRegex, '"$3":');
-    console.log(jsonStr);
+    jsonStr = jsonStr.replaceAll(attrRegex, '"$3":');
     return JSON.parse(jsonStr);
   };
 
