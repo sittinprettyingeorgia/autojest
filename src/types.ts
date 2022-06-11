@@ -47,14 +47,21 @@ export type Attribute = {
   [key in keyof AttributeType]: string | boolean;
 };
 
+export type TextMap = {
+  [key: string]: number;
+};
+export type TextChildren = {
+  multiple: boolean;
+  value: string;
+};
 export type TestObjectType = {
-  jsxText?: string[];
-  placeholderText?: string[];
-  labelText?: string[];
-  altText?: string[];
-  titleText?: string[];
+  jsxText?: TextChildren[];
+  placeholderText?: TextChildren[];
+  labelText?: TextChildren[];
+  altText?: TextChildren[];
+  titleText?: TextChildren[];
   events?: Attribute[];
 };
 export type TestObject = {
-  [key in keyof TestObjectType]: string[] | Event[];
+  [key in keyof TestObjectType]: TextChildren[] | Attribute[];
 };

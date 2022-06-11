@@ -6,6 +6,8 @@ import {
   ElemMap,
   TestObject,
   Attribute,
+  TextChildren,
+  TextMap,
 } from './types';
 
 const initialSplitRegex =
@@ -26,31 +28,72 @@ class Parser implements ParserI {
         this.testObject = {};
       }
 
-      //doesnt return placeholder text, alt text, etc.
-      getJsxTextChildren = (jsx: string) => {
+      getJsxText = (jsx: string): TextChildren[] => {
         //retrieves visible text
         const retrieveJsxText =
-          /((?<=(children: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/g;
-        const retrieveJsxsStartAndMiddleText = /([a-zA-Z0-9_.,\s:-]+(?=", "))/g;
-        const retrieveJsxsEndText = /((?<=("))[a\]-zA-Z0-9_.,\s:-]+(?="]))/g;
-        const textMatchers = [
+          /((?<=(children: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
+        const retrieveJsxsStartAndMiddleText =
+          /([a-zA-Z0-9_.,\s:-]+(?=", "))/gi;
+        const retrieveJsxsEndText = /((?<=("))[a\]-zA-Z0-9_.,\s:-]+(?="]))/gi;
+        const results = [
           ...jsx.matchAll(retrieveJsxText),
           ...jsx.matchAll(retrieveJsxsStartAndMiddleText),
           ...jsx.matchAll(retrieveJsxsEndText),
         ];
 
-        const textChildren: string[] = [];
-        for (const textMatcher of textMatchers) {
-          textChildren.push(textMatcher.values().next().value);
+        return this.getTextChildren(results);
+      };
+
+      getPlaceholderText = (jsx: string): TextChildren[] => {
+        const retrievePlaceholderText =
+          /((?<=(placeholder: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
+        const results = Array.from(jsx.matchAll(retrievePlaceholderText));
+        return this.getTextChildren(results);
+      };
+
+      getAltText = (jsx: string): TextChildren[] => {
+        const retrieveAltText = /((?<=(alt: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
+        const results = Array.from(jsx.matchAll(retrieveAltText));
+        return this.getTextChildren(results);
+      };
+
+      getTextChildren = (matchArray: RegExpMatchArray[]): TextChildren[] => {
+        const textChildren: TextChildren[] = [];
+        const map: TextMap = {};
+
+        //build map object so we can specify findAllByText or findByText based on # of occurrences.
+        for (const regArr of matchArray) {
+          const str = regArr[0];
+
+          if (str in map) {
+            map[str]++;
+          } else {
+            map[str] = 1;
+          }
+        }
+
+        //assign textChildren to testObject
+        for (const [key, val] of Object.entries(map)) {
+          const newTextChild: TextChildren = {
+            multiple: val > 1,
+            value: key,
+          };
+          textChildren.push(newTextChild);
         }
 
         return textChildren;
       };
 
-      convertToJson = (jsx: string): string[] => {
-        const textChildren = this.getTextChildren(jsx);
+      getTextElements = (jsx: string) => {
+        this.testObject['jsxText'] = this.getJsxText(jsx);
+        this.testObject['placeholderText'] = this.getPlaceholderText(jsx);
+        this.testObject['altText'] = this.getAltText(jsx);
+      };
 
-        return textChildren;
+      getTestObject = (jsx: string): TestObject => {
+        this.getTextElements(jsx);
+
+        return this.testObject;
       };
     }
 
@@ -68,9 +111,10 @@ class Parser implements ParserI {
       const eventLogicString = mainChild.shift(); //removes logic from component string
       console.log('mainChild', mainChild);
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
+      console.log('jsxList', jsxList);
       return Promise.all(
         jsxList.map(async (jsx: string) => {
-          return new ParserHelper().getTextChildren(jsx);
+          return new ParserHelper().getTestObject(jsx);
         })
       );
     };

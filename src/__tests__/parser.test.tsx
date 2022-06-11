@@ -21,13 +21,18 @@ const TestApp = () => {
         onChange={handleClick1}
         onMouseEnter={handleClick1}
       >
+        <input type="text" placeholder="test placeholder1" />
         <div onClick={handleClick1} data-testid="div1">
           <p onClick={handleClick1}>This is div1 paragraph</p>
+          <img alt="img1"></img>
         </div>
+        <img alt="img2"></img>
         <div data-testid="div2">
+          <input type="text" placeholder="test placeholder2" />
           <p>
             This is div2 paragraph.<span>This is a span1</span>
           </p>
+          <img alt="img3"></img>
           <button onClick={handleClick1}>change state1</button>outsideButton
         </div>
       </div>
@@ -36,12 +41,17 @@ const TestApp = () => {
     return (
       <Fragment>
         <div data-testid="div3">
+          <input type="text" placeholder="test placeholder3" />
           <p>
+            <img alt="img4"></img>
+            <input type="text" placeholder="test placeholder4" />
             This is a paragraph3.<span>This is a span3</span>Outside span
           </p>
           outsideP
-          <input type="text" placeholder="test placeholder" />
+          <img alt="img5"></img>
+          <input type="text" placeholder="test placeholder5" />
           <button onClick={handleClick2}>change state 3</button>outsideButton
+          <img alt="img6"></img>
         </div>
       </Fragment>
     );
@@ -205,7 +215,7 @@ describe('testing parser', () => {
   });
   describe('testing cleanComponent method', () => {
     /*it('should correctly clean a simple functional component', async () => {
-      const results = parser.cleanComponent(TestComponent2);
+      const results = await parser.parseComponent(TestComponent2);
       expect(results).toEqual(cleanComp2TestResult);
     });*/
     it('should correctly clean a conditional rendering functional component', async () => {
