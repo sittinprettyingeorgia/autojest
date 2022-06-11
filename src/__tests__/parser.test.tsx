@@ -40,6 +40,7 @@ const TestApp = () => {
             This is a paragraph3.<span>This is a span3</span>Outside span
           </p>
           outsideP
+          <input type="text" placeholder="test placeholder" />
           <button onClick={handleClick2}>change state 3</button>outsideButton
         </div>
       </Fragment>

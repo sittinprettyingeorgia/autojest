@@ -38,11 +38,10 @@ class Parser implements ParserI {
           ...jsx.matchAll(retrieveJsxsEndText),
         ];
 
-        const textChildren = [
-          textMatchers[0].values().next().value,
-          textMatchers[1].values().next().value,
-          textMatchers[2].values().next().value,
-        ];
+        const textChildren: string[] = [];
+        for (const textMatcher of textMatchers) {
+          textChildren.push(textMatcher.values().next().value);
+        }
 
         console.log('textChildren', textChildren);
         return textChildren;
@@ -68,7 +67,6 @@ class Parser implements ParserI {
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      console.log('before conversion', jsxList[1]);
 
       return Promise.all(
         jsxList.map(async (jsx: string) => {
