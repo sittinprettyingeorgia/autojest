@@ -57,9 +57,7 @@ export type TextChildren = {
 export type TestObjectType = {
   jsxText?: TextChildren[];
   placeholderText?: TextChildren[];
-  labelText?: TextChildren[];
   altText?: TextChildren[];
-  titleText?: TextChildren[];
   events?: Attribute[];
 };
 export type TestObject = {

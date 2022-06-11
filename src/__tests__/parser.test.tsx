@@ -27,14 +27,24 @@ const TestApp = () => {
           <img alt="img1"></img>
         </div>
         <img alt="img2"></img>
+        <img alt="img2"></img>
         <div data-testid="div2">
           <input type="text" placeholder="test placeholder2" />
           <p>
             This is div2 paragraph.<span>This is a span1</span>
           </p>
+          <label>
+            test1
+            <input />
+          </label>
+          <label>
+            test2
+            <textarea></textarea>
+          </label>
           <img alt="img3"></img>
           <button onClick={handleClick1}>change state1</button>outsideButton
         </div>
+        <input type="text" placeholder="test placeholder2" />
       </div>
     );
   } else {
@@ -44,14 +54,24 @@ const TestApp = () => {
           <input type="text" placeholder="test placeholder3" />
           <p>
             <img alt="img4"></img>
+            <img alt="img4"></img>
             <input type="text" placeholder="test placeholder4" />
             This is a paragraph3.<span>This is a span3</span>Outside span
           </p>
           outsideP
           <img alt="img5"></img>
+          <label>
+            Username
+            <input />
+          </label>
+          <label>
+            Username
+            <textarea></textarea>
+          </label>
           <input type="text" placeholder="test placeholder5" />
           <button onClick={handleClick2}>change state 3</button>outsideButton
           <img alt="img6"></img>
+          <input type="text" placeholder="test placeholder4" />
         </div>
       </Fragment>
     );
