@@ -22,6 +22,8 @@
     "typescript": "4.6.4"
   },
   "dependencies": {
+    "@types/lodash.merge": "4.6.6",
+    "lodash.merge": "4.6.2",
     "react": "18.1.0",
     "react-dom": "18.1.0",
     "ts-node": "10.8.0"
