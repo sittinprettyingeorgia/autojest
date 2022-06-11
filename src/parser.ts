@@ -17,7 +17,7 @@ const jsxRegex =
 const initialSlice = 'return ((0, jsx_runtime_1.';
 const ZERO = 0;
 const ONE = 1;
-
+const currentEventRegex = /[}a-zA-Z0-9{_.",\s:-]+(?=\bonChange\b)/gi;
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<TestObject[]>;
   //cleanComponent: (component: () => JSX.Element) => ChildList;
