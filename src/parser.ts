@@ -26,7 +26,8 @@ class Parser implements ParserI {
         this.testObject = {};
       }
 
-      getTextChildren = (jsx: string) => {
+      //doesnt return placeholder text, alt text, etc.
+      getJsxTextChildren = (jsx: string) => {
         //retrieves visible text
         const retrieveJsxText =
           /((?<=(children: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/g;
@@ -43,7 +44,6 @@ class Parser implements ParserI {
           textChildren.push(textMatcher.values().next().value);
         }
 
-        console.log('textChildren', textChildren);
         return textChildren;
       };
 
@@ -66,8 +66,8 @@ class Parser implements ParserI {
 
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
+      console.log('mainChild', mainChild);
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-
       return Promise.all(
         jsxList.map(async (jsx: string) => {
           return new ParserHelper().getTextChildren(jsx);
