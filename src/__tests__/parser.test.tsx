@@ -28,7 +28,7 @@ const TestApp = () => {
           <p>
             This is div2 paragraph.<span>This is a span1</span>
           </p>
-          <button onClick={handleClick1}>change state1</button>
+          <button onClick={handleClick1}>change state1</button>outsideButton
         </div>
       </div>
     );
@@ -37,9 +37,10 @@ const TestApp = () => {
       <Fragment>
         <div data-testid="div3">
           <p>
-            This is a paragraph3.<span>This is a span3</span>
+            This is a paragraph3.<span>This is a span3</span>Outside span
           </p>
-          <button onClick={handleClick2}>change state 3</button>
+          outsideP
+          <button onClick={handleClick2}>change state 3</button>outsideButton
         </div>
       </Fragment>
     );
@@ -207,7 +208,7 @@ describe('testing parser', () => {
       expect(results).toEqual(cleanComp2TestResult);
     });*/
     it('should correctly clean a conditional rendering functional component', async () => {
-      const results = parser.cleanComponent(TestApp);
+      const results = await parser.parseComponent(TestApp);
       expect(results).toEqual(cleanTestAppTestResult);
     });
     /*it('should correctly clean a functional component with text outside of immediate jsx', async () => {
