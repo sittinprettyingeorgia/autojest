@@ -1,14 +1,5 @@
-import merge from 'lodash.merge';
-import {
-  ParserI,
-  BracketString,
-  ChildList,
-  ElemMap,
-  TestObject,
-  Attribute,
-  TextChildren,
-  TextMap,
-} from './types';
+import Formatter from 'formatter';
+import { Attribute, ParserI, TestObject, TextChildren, TextMap } from './types';
 
 const initialSplitRegex =
   /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
@@ -17,7 +8,26 @@ const jsxRegex =
 const initialSlice = 'return ((0, jsx_runtime_1.';
 const ZERO = 0;
 const ONE = 1;
-const currentEventRegex = /[}a-zA-Z0-9{_.",\s:-]+(?=\bonChange\b)/gi;
+const onClickRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonClick\b)/gi;
+const onChangeRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonChange\b)/gi;
+const onMouseOverRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOver\b)/gi;
+const onMouseDownRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseDown\b)/gi;
+const onMouseOutRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOut\b)/gi;
+const onKeyDownRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyDown\b)/gi;
+const onKeyPressRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyPress\b)/gi;
+const onInputRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonInput\b)/gi;
+const dataTestIdRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bdataTestId\b)/gi;
+const roleRegex =
+  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\brole\b)/gi;
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<TestObject[]>;
   //cleanComponent: (component: () => JSX.Element) => ChildList;
@@ -25,10 +35,57 @@ class Parser implements ParserI {
   constructor() {
     class ParserHelper {
       testObject: TestObject;
-
-      constructor() {
-        this.testObject = {};
+      formatter: Formatter;
+      constructor(formatter: Formatter, testObject: TestObject) {
+        this.testObject = testObject;
+        this.formatter = formatter;
       }
+
+      handleNameFlag = (
+        char: string,
+        nameFlag: boolean,
+        elemName: string
+      ): [nameFlag: boolean, elemName: string, newElem: Attribute] => {
+        if (char === '"' && !nameFlag) {
+          return [true, '', undefined];
+        } else if (char === '"' && nameFlag) {
+          const newElem: Attribute = { elemName };
+          return [false, '', newElem];
+        }
+
+        elemName += char;
+
+        return [nameFlag, elemName, undefined];
+      };
+
+      /*handleEventFlag = (
+        char: string,
+        eventName: string
+      ): [nameFlag: boolean, elemName: string, newElem: Attribute] => {
+        const regex = 
+        if (eventName.includes('on')) {
+          return [true, '', undefined];
+        } 
+
+        return [nameFlag, elemName, undefined];
+      };*/
+
+      /*getEvents = (jsx: string) => {
+        const event = '';
+        const eventFlag = false;
+        let nameFlag = false;
+        let currentElem: Attribute;
+        let elemName = '';
+        for (let i = 0; i < jsx.length; i++) {
+          const char = jsx.charAt(i);
+          [nameFlag, elemName, newElem] = this.handleNameFlag(
+            char,
+            nameFlag,
+            elemName
+          );
+
+        }
+      };*/
 
       getJsxText = async (jsx: string): Promise<TextChildren[]> => {
         //retrieves visible text
@@ -118,7 +175,13 @@ class Parser implements ParserI {
 
       return Promise.all(
         jsxList.map(async (jsx: string) => {
-          return new ParserHelper().getTestObject(jsx);
+          const events: Attribute[] = [];
+          const newTestObject = {
+            events,
+          };
+          const formatter = new Formatter();
+
+          return new ParserHelper(formatter, newTestObject).getTestObject(jsx);
         })
       );
     };

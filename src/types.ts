@@ -1,36 +1,5 @@
-import React from 'react';
-export interface BracketString {
-  [key: string]: string;
-}
-export interface ChildList {
-  [key: string]: any;
-}
-export interface AutoJestI {
-  parseComponent: (component: () => JSX.Element) => ChildList;
-}
-export interface ParserI {
-  parseComponent: (component: () => JSX.Element) => ChildList;
-}
-export interface FormatterI {
-  formatComponent: () => string;
-}
-export interface FileWriterI {
-  writeFile: () => void;
-}
-export interface ElemMap {
-  [key: string]: number;
-}
-
-/**
- * ChildrenType is the object referenced by the children key
- * within an object returned by the cleanComponent method.
- */
-export type ChildrenType = {
-  children: (string | object)[];
-};
-
 export type AttributeType = {
-  elemName: string; // div, p, span etc.
+  elemName?: string; // div, p, span etc.
   onClick?: boolean;
   onChange?: boolean;
   onMouseOver?: boolean;
@@ -54,12 +23,44 @@ export type TextChildren = {
   multiple: boolean;
   value: string;
 };
+
 export type TestObjectType = {
-  jsxText?: TextChildren[];
-  placeholderText?: TextChildren[];
-  altText?: TextChildren[];
+  name: string;
+  Text?: TextChildren[];
+  PlaceholderText?: TextChildren[];
+  AltText?: TextChildren[];
   events?: Attribute[];
 };
 export type TestObject = {
-  [key in keyof TestObjectType]: TextChildren[] | Attribute[];
+  [key in keyof TestObjectType]: (TextChildren | Attribute | string)[];
+};
+
+export interface Flag {
+  [key: string]: string;
+}
+export interface ChildList {
+  [key: string]: any;
+}
+export interface AutoJestI {
+  parseComponent: (component: () => JSX.Element) => ChildList;
+}
+export interface ParserI {
+  parseComponent: (component: () => JSX.Element) => ChildList;
+}
+export interface FormatterI {
+  formatTestObject: (testObj: TestObject) => string;
+}
+export interface FileWriterI {
+  writeFile: () => void;
+}
+export interface ElemMap {
+  [key: string]: number;
+}
+
+/**
+ * ChildrenType is the object referenced by the children key
+ * within an object returned by the cleanComponent method.
+ */
+export type ChildrenType = {
+  children: (string | object)[];
 };
