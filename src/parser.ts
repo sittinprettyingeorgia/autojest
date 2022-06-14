@@ -1,4 +1,4 @@
-import Formatter from 'formatter';
+import Formatter from './formatter';
 import { Attribute, ParserI, TestObject, TextChildren, TextMap } from './types';
 
 const initialSplitRegex =
@@ -29,13 +29,13 @@ const dataTestIdRegex =
 const roleRegex =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\brole\b)/gi;
 class Parser implements ParserI {
-  parseComponent: (component: () => JSX.Element) => Promise<TestObject[]>;
-  //cleanComponent: (component: () => JSX.Element) => ChildList;
+  parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 
   constructor() {
     class ParserHelper {
       testObject: TestObject;
       formatter: Formatter;
+
       constructor(formatter: Formatter, testObject: TestObject) {
         this.testObject = testObject;
         this.formatter = formatter;
@@ -86,6 +86,9 @@ class Parser implements ParserI {
 
         }
       };*/
+      formatRenderingTests = (testObj: TestObject) => {
+        return this.formatter.formatTestObject(testObj);
+      };
 
       getJsxText = async (jsx: string): Promise<TextChildren[]> => {
         //retrieves visible text
@@ -146,9 +149,9 @@ class Parser implements ParserI {
       };
 
       getTextElements = async (jsx: string): Promise<void> => {
-        this.testObject['jsxText'] = await this.getJsxText(jsx);
-        this.testObject['placeholderText'] = await this.getPlaceholderText(jsx);
-        this.testObject['altText'] = await this.getAltText(jsx);
+        this.testObject['Text'] = await this.getJsxText(jsx);
+        this.testObject['PlaceholderText'] = await this.getPlaceholderText(jsx);
+        this.testObject['AltText'] = await this.getAltText(jsx);
       };
 
       getTestObject = async (jsx: string): Promise<TestObject> => {
@@ -160,7 +163,7 @@ class Parser implements ParserI {
 
     this.parseComponent = async (
       component: () => JSX.Element
-    ): Promise<TestObject[]> => {
+    ): Promise<string[]> => {
       const compString = component.toString();
       const mainChild = compString
         .split(initialSplitRegex)
@@ -171,17 +174,19 @@ class Parser implements ParserI {
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      console.log('jsxList', jsxList);
 
       return Promise.all(
         jsxList.map(async (jsx: string) => {
           const events: Attribute[] = [];
           const newTestObject = {
+            name: component.name,
             events,
           };
           const formatter = new Formatter();
 
-          return new ParserHelper(formatter, newTestObject).getTestObject(jsx);
+          const parser = new ParserHelper(formatter, newTestObject);
+          const testObj = await parser.getTestObject(jsx);
+          return parser.formatRenderingTests(testObj);
         })
       );
     };

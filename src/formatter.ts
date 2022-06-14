@@ -6,10 +6,13 @@ class Formatter implements FormatterI {
   constructor() {
     const addStart = (name: string) => {
       this.file = '';
-      return (
+      this.file +=
         `describe('testing ${name} component', () => {\n` +
-        `\t it('should render all visible elements', () => {\n`
-      );
+        `\tit('should render all visible elements', async () => {\n`;
+    };
+
+    const addEnd = () => {
+      this.file += `\t};\n};`;
     };
 
     const addRenderingTests = (testObject: TestObject) => {
@@ -22,18 +25,23 @@ class Formatter implements FormatterI {
         for (const textChild of val as TextChildren[]) {
           if (textChild.multiple) {
             this.file +=
-              `const items = expect(await screen.findAllBy${name});\n` +
-              `\t\t\t for(const item of items){\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}`;
+              `\t\tconst items = expect(await screen.findAllBy${name}('${textChild.value}'));\n` +
+              `\t\tfor(const item of items) {\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}\n`;
           } else {
-            this.file += `expect(await screen.findBy${name}).toBeInTheDocument();\n`;
+            this.file += `\t\texpect(await screen.findBy${name}('${textChild.value}')).toBeInTheDocument();\n`;
           }
         }
       }
     };
 
-    this.formatTestObject = (): string => {
-      const str = '';
-      return '';
+    this.formatTestObject = (testObj: TestObject): string => {
+      addStart(testObj.name as unknown as string);
+      addRenderingTests(testObj);
+      addEnd();
+      const results = this.file;
+      this.file = '';
+      console.log(results);
+      return results;
     };
   }
 }

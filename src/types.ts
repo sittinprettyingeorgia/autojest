@@ -32,7 +32,7 @@ export type TestObjectType = {
   events?: Attribute[];
 };
 export type TestObject = {
-  [key in keyof TestObjectType]: (TextChildren | Attribute | string)[];
+  [key in keyof TestObjectType]: string | (TextChildren | Attribute)[];
 };
 
 export interface Flag {
@@ -45,7 +45,7 @@ export interface AutoJestI {
   parseComponent: (component: () => JSX.Element) => ChildList;
 }
 export interface ParserI {
-  parseComponent: (component: () => JSX.Element) => ChildList;
+  parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 }
 export interface FormatterI {
   formatTestObject: (testObj: TestObject) => string;
