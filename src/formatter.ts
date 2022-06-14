@@ -38,7 +38,6 @@ class Formatter implements FormatterI {
       addEnd();
       const results = this.file;
       this.file = '';
-      console.log(results);
       return results;
     };
   }
