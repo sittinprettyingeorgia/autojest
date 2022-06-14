@@ -8,11 +8,12 @@ class Formatter implements FormatterI {
       this.file = '';
       this.file +=
         `describe('testing ${name} component', () => {\n` +
-        `\tit('should render all visible elements', async () => {\n`;
+        `\tit('should render all visible elements', async () => {\n` +
+        `\t\trender(<${name} />);\n`;
     };
 
     const addEnd = () => {
-      this.file += `\t};\n};`;
+      this.file += `\t});\n});`;
     };
 
     const addRenderingTests = (testObject: TestObject) => {
@@ -20,15 +21,12 @@ class Formatter implements FormatterI {
         if (key === 'name' || key === 'events') {
           continue;
         }
-        const name = key.slice(key.indexOf('Text'), key.length);
 
         for (const textChild of val as TextChildren[]) {
           if (textChild.multiple) {
-            this.file +=
-              `\t\tconst items = expect(await screen.findAllBy${name}('${textChild.value}'));\n` +
-              `\t\tfor(const item of items) {\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}\n`;
+            this.file += `\t\tfor(const item of await screen.findAllBy${key}('${textChild.value}')) {\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}\n`;
           } else {
-            this.file += `\t\texpect(await screen.findBy${name}('${textChild.value}')).toBeInTheDocument();\n`;
+            this.file += `\t\texpect(await screen.findBy${key}('${textChild.value}')).toBeInTheDocument();\n`;
           }
         }
       }

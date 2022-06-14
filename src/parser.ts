@@ -34,11 +34,9 @@ class Parser implements ParserI {
   constructor() {
     class ParserHelper {
       testObject: TestObject;
-      formatter: Formatter;
 
-      constructor(formatter: Formatter, testObject: TestObject) {
+      constructor(testObject: TestObject) {
         this.testObject = testObject;
-        this.formatter = formatter;
       }
 
       handleNameFlag = (
@@ -86,9 +84,6 @@ class Parser implements ParserI {
 
         }
       };*/
-      formatRenderingTests = (testObj: TestObject) => {
-        return this.formatter.formatTestObject(testObj);
-      };
 
       getJsxText = async (jsx: string): Promise<TextChildren[]> => {
         //retrieves visible text
@@ -184,9 +179,9 @@ class Parser implements ParserI {
           };
           const formatter = new Formatter();
 
-          const parser = new ParserHelper(formatter, newTestObject);
+          const parser = new ParserHelper(newTestObject);
           const testObj = await parser.getTestObject(jsx);
-          return parser.formatRenderingTests(testObj);
+          return formatter.formatTestObject(testObj);
         })
       );
     };

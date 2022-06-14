@@ -2,8 +2,8 @@
 import Parser from '../Parser';
 import { Fragment, useState } from 'react';
 
-const TestApp = () => {
-  const [state1, setState1] = useState(false);
+export const TestApp = () => {
+  const [state1, setState1] = useState(true);
   const [state2, setState2] = useState(false);
 
   const handleClick1 = () => {
