@@ -28,4 +28,9 @@ describe('testing TestApp component', () => {
     }
     expect(await screen.findByAltText('img3')).toBeInTheDocument();
   });
+  describe('should handle onClick events', () => {
+    it('should respond to onclick', async () => {
+      render(<TestApp />);
+    });
+  });
 });

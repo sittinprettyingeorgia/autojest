@@ -39,51 +39,9 @@ class Parser implements ParserI {
         this.testObject = testObject;
       }
 
-      handleNameFlag = (
-        char: string,
-        nameFlag: boolean,
-        elemName: string
-      ): [nameFlag: boolean, elemName: string, newElem: Attribute] => {
-        if (char === '"' && !nameFlag) {
-          return [true, '', undefined];
-        } else if (char === '"' && nameFlag) {
-          const newElem: Attribute = { elemName };
-          return [false, '', newElem];
-        }
-
-        elemName += char;
-
-        return [nameFlag, elemName, undefined];
+      getOnClickEvents = (jsx: string) => {
+        const results = Array.from(jsx.matchAll(onClickRegex));
       };
-
-      /*handleEventFlag = (
-        char: string,
-        eventName: string
-      ): [nameFlag: boolean, elemName: string, newElem: Attribute] => {
-        const regex = 
-        if (eventName.includes('on')) {
-          return [true, '', undefined];
-        } 
-
-        return [nameFlag, elemName, undefined];
-      };*/
-
-      /*getEvents = (jsx: string) => {
-        const event = '';
-        const eventFlag = false;
-        let nameFlag = false;
-        let currentElem: Attribute;
-        let elemName = '';
-        for (let i = 0; i < jsx.length; i++) {
-          const char = jsx.charAt(i);
-          [nameFlag, elemName, newElem] = this.handleNameFlag(
-            char,
-            nameFlag,
-            elemName
-          );
-
-        }
-      };*/
 
       getJsxText = async (jsx: string): Promise<TextChildren[]> => {
         //retrieves visible text
@@ -169,7 +127,7 @@ class Parser implements ParserI {
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
       const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-
+      console.log(jsxList);
       return Promise.all(
         jsxList.map(async (jsx: string) => {
           const events: Attribute[] = [];
@@ -181,6 +139,7 @@ class Parser implements ParserI {
 
           const parser = new ParserHelper(newTestObject);
           const testObj = await parser.getTestObject(jsx);
+          console.log(testObj);
           return formatter.formatTestObject(testObj);
         })
       );
