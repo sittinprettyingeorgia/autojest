@@ -36,14 +36,19 @@ class Parser implements ParserI {
       testObject: TestObject;
       elemStack: Attribute[];
       pastFirst: boolean;
+      commaFlag: boolean;
+
       constructor(testObject: TestObject) {
         this.testObject = testObject;
         this.elemStack = [];
         this.pastFirst = false;
+        this.commaFlag = false;
       }
 
       singleChild = '(0, jsx_runtime_1.jsx)("';
       multipleChild = '(0, jsx_runtime_1.jsxs)("';
+      single = 'jsx_runtime_1.jsx';
+      multi = 'jsx_runtime_1.jsxs';
       childrenKey = '/children: ';
       dontKeep = /[",\])([':]+/gi;
       DONT_KEEP = {
@@ -59,9 +64,10 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to assign current str as the name of our first attribute
-        currentAttr.elemName = str;
+        currentAttr.elemName = str.trim();
         str = '';
         this.pastFirst = true;
+        this.commaFlag = true;
 
         return [str, currentAttr];
       };
@@ -72,17 +78,18 @@ class Parser implements ParserI {
       ): [str: string, newAttr: Attribute] => {
         //we need to remove all unused chars
         str = str.replace(this.childrenKey, '');
-
-        str = str.includes(this.singleChild)
-          ? str.replace(this.singleChild, '')
-          : str.replace(this.multipleChild, '');
+        str = str.replaceAll(this.singleChild, '');
+        str = str.replaceAll(this.multipleChild, '');
+        str = str.replaceAll(this.single, '');
+        str = str.replaceAll(this.multi, '');
 
         str = str.replaceAll(this.dontKeep, '');
 
         //we need to push our parent attr on the stack and assign a new currentAttr
         this.elemStack.push(currentAttr);
         const newAttr: Attribute = {};
-        newAttr.elemName = str;
+        newAttr.elemName = str.trim();
+        this.commaFlag = true;
 
         return ['', newAttr];
       };
@@ -110,8 +117,9 @@ class Parser implements ParserI {
         }
 
         const [key, val] = str.split(':');
-        currentAttr[key as keyof Attribute] = val;
+        currentAttr[key.trim() as keyof Attribute] = val.trim();
         (this.testObject.elems as Attribute[]).push(currentAttr);
+        this.commaFlag = false;
 
         return ['', parentElem];
       };
@@ -121,14 +129,14 @@ class Parser implements ParserI {
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        str = str.trim();
         if (!(char in this.DONT_KEEP)) {
           str += char;
         }
 
-        if (!str) return [str, currentAttr];
+        if (!str || str.search(/[a-zA-Z0-9"'_-]+/gi) < ZERO)
+          return [str, currentAttr];
 
-        if (char === ',' && str.includes(':')) {
+        if (char === ',' && str.includes(':') && this.commaFlag) {
           return this.handleAttribute(str, currentAttr);
         } else if (char === '{' && !this.pastFirst) {
           return this.handleFirstOpeningBracket(str, currentAttr);
