@@ -128,6 +128,10 @@ class Parser implements ParserI {
         (this.testObject.elems as Attribute[]).push(currentAttr);
         this.commaFlag = false;
 
+        if (!this.elemStack.length) {
+          (this.testObject.elems as Attribute[]).push(parentElem);
+        }
+
         return ['', parentElem];
       };
 
