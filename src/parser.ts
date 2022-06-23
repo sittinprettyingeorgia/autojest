@@ -50,13 +50,14 @@ class Parser implements ParserI {
       single = 'jsx_runtime_1.jsx';
       multi = 'jsx_runtime_1.jsxs';
       childrenKey = '/children: ';
-      dontKeep = /[",\])([':]+/gi;
+      dontKeep = /[",\]0)([':]+/gi;
       DONT_KEEP = {
         '{': '{',
         '}': '{',
         '[': '[',
         ']': ']',
         ';': ';',
+        '"': '"',
       };
 
       handleFirstOpeningBracket = (
@@ -64,7 +65,7 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to assign current str as the name of our first attribute
-        currentAttr.elemName = str.trim();
+        currentAttr.elemName = str.trim().replaceAll(this.dontKeep, '');
         str = '';
         this.pastFirst = true;
         this.commaFlag = true;
@@ -88,7 +89,7 @@ class Parser implements ParserI {
         //we need to push our parent attr on the stack and assign a new currentAttr
         this.elemStack.push(currentAttr);
         const newAttr: Attribute = {};
-        newAttr.elemName = str.trim();
+        newAttr.elemName = str.trim().replaceAll(this.dontKeep, '');
         this.commaFlag = true;
 
         return ['', newAttr];
@@ -100,7 +101,10 @@ class Parser implements ParserI {
       ): [str: string, newAttr: Attribute] => {
         //we need to handle attribute assignment(onclick,data-testid, etc)
         str = str.replaceAll('"', '');
-        const [key, val] = str.split(':');
+        let [key, val] = str.split(':');
+        key = key.trim().replaceAll(this.dontKeep, '');
+        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+
         currentAttr[key.trim() as keyof Attribute] = val.trim();
 
         return ['', currentAttr];
@@ -116,8 +120,11 @@ class Parser implements ParserI {
           parentElem = this.elemStack.pop();
         }
 
-        const [key, val] = str.split(':');
-        currentAttr[key.trim() as keyof Attribute] = val.trim();
+        let [key, val] = str.split(':');
+        key = key.trim().replaceAll(this.dontKeep, '');
+        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+
+        currentAttr[key as keyof Attribute] = val;
         (this.testObject.elems as Attribute[]).push(currentAttr);
         this.commaFlag = false;
 
