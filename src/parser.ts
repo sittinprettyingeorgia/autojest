@@ -105,7 +105,7 @@ class Parser implements ParserI {
         key = key.trim().replaceAll(this.dontKeep, '');
         val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
 
-        currentAttr[key.trim() as keyof Attribute] = val.trim();
+        if (key && val) currentAttr[key.trim() as keyof Attribute] = val.trim();
 
         return ['', currentAttr];
       };
@@ -124,11 +124,14 @@ class Parser implements ParserI {
         key = key.trim().replaceAll(this.dontKeep, '');
         val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
 
-        currentAttr[key as keyof Attribute] = val;
-        (this.testObject.elems as Attribute[]).push(currentAttr);
+        if (key && val) currentAttr[key as keyof Attribute] = val;
+
+        if (currentAttr != null)
+          (this.testObject.elems as Attribute[]).push(currentAttr);
+
         this.commaFlag = false;
 
-        if (!this.elemStack.length) {
+        if (!this.elemStack.length && parentElem != null) {
           (this.testObject.elems as Attribute[]).push(parentElem);
         }
 
@@ -147,7 +150,13 @@ class Parser implements ParserI {
         if (!str || str.search(/[a-zA-Z0-9"'_-]+/gi) < ZERO)
           return [str, currentAttr];
 
-        if (char === ',' && str.includes(':') && this.commaFlag) {
+        if (
+          char === ',' &&
+          (str.includes(':') ||
+            str.includes('jsx_runtime_1.jsx') ||
+            str.includes('jsx_runtime_1.jsxs')) &&
+          this.commaFlag
+        ) {
           return this.handleAttribute(str, currentAttr);
         } else if (char === '{' && !this.pastFirst) {
           return this.handleFirstOpeningBracket(str, currentAttr);
