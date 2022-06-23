@@ -34,13 +34,86 @@ class Parser implements ParserI {
   constructor() {
     class ParserHelper {
       testObject: TestObject;
+      elemStack: Attribute[];
 
       constructor(testObject: TestObject) {
         this.testObject = testObject;
+        this.elemStack = [];
       }
 
-      getOnClickEvents = (jsx: string) => {
-        const results = Array.from(jsx.matchAll(onClickRegex));
+      singleChild = '(0, jsx_runtime_1.jsx)("';
+      multipleChild = '(0, jsx_runtime_1.jsxs)("';
+      childrenKey = 'children: ';
+      dontKeep = /[",\][':\s]+/;
+
+      handleFirstOpeningBracket = (
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //remove any quotes and assign name
+        str = str.replaceAll('"', '');
+        str = str.replaceAll("'", '');
+
+        currentAttr.elemName = str;
+        str = '';
+        return [str, currentAttr];
+      };
+
+      handleOpeningBracket = (
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //we need to remove all unused chars
+        if (str.includes(this.singleChild)) {
+          str = str.replaceAll(this.singleChild, '');
+          str = str.replaceAll(this.childrenKey, '');
+          str = str.replaceAll(this.dontKeep, '');
+        } else if (str.includes(this.multipleChild)) {
+          str = str.replaceAll(this.multipleChild, '');
+          str = str.replaceAll(this.childrenKey, '');
+          str = str.replaceAll(this.dontKeep, '');
+        }
+
+        //we need to push our parent attr on the stack and assign a new currentAttr
+        this.elemStack.push(currentAttr);
+        const newAttr: Attribute = {};
+        newAttr.elemName = str;
+
+        return ['', newAttr];
+      };
+
+      handleClosingBracket = () => {};
+
+      handleChar = (
+        char: string,
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //we need to assign current str as the name of our first attribute
+        if (char === '{' && !str.includes('children: ')) {
+          return this.handleFirstOpeningBracket(str, currentAttr);
+        } else if (char === '{') {
+          return this.handleOpeningBracket(str, currentAttr);
+        } else if (char === '}') {
+          //handle closing bracket
+        }
+        //we have encountered a key value pair
+        else if (char === ',' && !str.includes('"') && str.includes(':')) {
+        }
+      };
+
+      getEvents = (jsx: string) => {
+        const attr: Attribute = {};
+        let str = '';
+        for (let i = 0; i < jsx.length; i++) {
+          const char = jsx.charAt(i);
+
+          str += char;
+
+          if (char === '{') {
+            attr.elemName = str;
+          }
+        }
       };
 
       getJsxText = async (jsx: string): Promise<TextChildren[]> => {
@@ -126,13 +199,13 @@ class Parser implements ParserI {
 
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
-      const jsxList = mainChild.map((jsx) => jsx.replaceAll(jsxRegex, ''));
-      console.log(jsxList);
+      console.log('mainChild', mainChild);
+      let count = 1;
       return Promise.all(
-        jsxList.map(async (jsx: string) => {
+        mainChild.map(async (jsx: string) => {
           const events: Attribute[] = [];
           const newTestObject = {
-            name: component.name,
+            name: component.name + ' ' + count++,
             events,
           };
           const formatter = new Formatter();
