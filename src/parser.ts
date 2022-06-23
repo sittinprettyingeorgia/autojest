@@ -89,16 +89,19 @@ class Parser implements ParserI {
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        //we need to assign current str as the name of our first attribute
-        if (char === '{' && !str.includes('children: ')) {
+        //we have encountered a key value pair
+        if (char === ',' && !str.includes('"') && str.includes(':')) {
+          //we need to handle attribute assignment(onclick,data-testid, etc)
+          const [key, val] = str.split(':');
+          currentAttr[key.trim() as keyof Attribute] = val.trim();
+          return ['', currentAttr];
+        } else if (char === '{' && !str.includes('children: ')) {
+          //we need to assign current str as the name of our first attribute
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
         } else if (char === '}') {
           //handle closing bracket
-        }
-        //we have encountered a key value pair
-        else if (char === ',' && !str.includes('"') && str.includes(':')) {
         }
       };
 

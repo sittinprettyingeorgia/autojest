@@ -9,6 +9,7 @@ export type AttributeType = {
   onKeyPress?: boolean;
   onBlur?: boolean;
   onInput?: boolean;
+  type?: string;
   'data-testid'?: string;
   role?: string;
 };
