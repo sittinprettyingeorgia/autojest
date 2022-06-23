@@ -18,7 +18,7 @@ class Formatter implements FormatterI {
 
     const addRenderingTests = (testObject: TestObject) => {
       for (const [key, val] of Object.entries(testObject)) {
-        if (key === 'name' || key === 'events') {
+        if (key === 'name' || key === 'elems') {
           continue;
         }
 

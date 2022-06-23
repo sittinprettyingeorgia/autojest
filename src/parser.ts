@@ -230,13 +230,19 @@ class Parser implements ParserI {
       };
 
       getTextElements = async (jsx: string): Promise<void> => {
-        this.testObject['Text'] = await this.getJsxText(jsx);
-        this.testObject['PlaceholderText'] = await this.getPlaceholderText(jsx);
-        this.testObject['AltText'] = await this.getAltText(jsx);
+        const [def, placeholder, alt] = await Promise.all([
+          this.getJsxText(jsx),
+          this.getPlaceholderText(jsx),
+          this.getAltText(jsx),
+        ]);
+
+        this.testObject['Text'] = def;
+        this.testObject['PlaceholderText'] = placeholder;
+        this.testObject['AltText'] = alt;
       };
 
       getTestObject = async (jsx: string): Promise<TestObject> => {
-        //await this.getTextElements(jsx);
+        await this.getTextElements(jsx);
         this.getEvents(jsx);
         return this.testObject;
       };
