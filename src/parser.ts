@@ -35,28 +35,34 @@ class Parser implements ParserI {
     class ParserHelper {
       testObject: TestObject;
       elemStack: Attribute[];
-
+      pastFirst: boolean;
       constructor(testObject: TestObject) {
         this.testObject = testObject;
         this.elemStack = [];
+        this.pastFirst = false;
       }
 
       singleChild = '(0, jsx_runtime_1.jsx)("';
       multipleChild = '(0, jsx_runtime_1.jsxs)("';
-      childrenKey = 'children: ';
-      dontKeep = /[",\][':\s]+/;
+      childrenKey = '/children: ';
+      dontKeep = /[",\])([':]+/gi;
+      DONT_KEEP = {
+        '{': '{',
+        '}': '{',
+        '[': '[',
+        ']': ']',
+        ';': ';',
+      };
 
       handleFirstOpeningBracket = (
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to assign current str as the name of our first attribute
-        //remove any quotes and assign name
-        str = str.replaceAll('"', '');
-        str = str.replaceAll("'", '');
-
         currentAttr.elemName = str;
         str = '';
+        this.pastFirst = true;
+
         return [str, currentAttr];
       };
 
@@ -65,10 +71,12 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to remove all unused chars
-        str = str.replaceAll(this.childrenKey, '');
+        str = str.replace(this.childrenKey, '');
+
         str = str.includes(this.singleChild)
-          ? str.replaceAll(this.singleChild, '')
-          : str.replaceAll(this.multipleChild, '');
+          ? str.replace(this.singleChild, '')
+          : str.replace(this.multipleChild, '');
+
         str = str.replaceAll(this.dontKeep, '');
 
         //we need to push our parent attr on the stack and assign a new currentAttr
@@ -96,10 +104,15 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
-        const parentElem = this.elemStack.pop();
+        let parentElem: Attribute;
+        if (this.elemStack.length) {
+          parentElem = this.elemStack.pop();
+        }
+
         const [key, val] = str.split(':');
         currentAttr[key as keyof Attribute] = val;
         (this.testObject.elems as Attribute[]).push(currentAttr);
+
         return ['', parentElem];
       };
 
@@ -108,23 +121,32 @@ class Parser implements ParserI {
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        if (char === ',' && str.trim() && str.includes(':')) {
+        str = str.trim();
+        if (!(char in this.DONT_KEEP)) {
+          str += char;
+        }
+
+        if (!str) return [str, currentAttr];
+
+        if (char === ',' && str.includes(':')) {
           return this.handleAttribute(str, currentAttr);
-        } else if (char === '{' && !this.elemStack.length) {
+        } else if (char === '{' && !this.pastFirst) {
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
         } else if (char === '}') {
           return this.handleClosingBracket(str, currentAttr);
         }
+
+        return [str, currentAttr];
       };
 
       getEvents = (jsx: string) => {
         let currentAttr: Attribute = {};
         let str = '';
+
         for (let i = 0; i < jsx.length; i++) {
           const char = jsx.charAt(i);
-          if (char === '(' || char === ')') continue;
 
           [str, currentAttr] = this.handleChar(char, str, currentAttr);
         }
@@ -195,8 +217,8 @@ class Parser implements ParserI {
       };
 
       getTestObject = async (jsx: string): Promise<TestObject> => {
-        await this.getTextElements(jsx);
-
+        //await this.getTextElements(jsx);
+        this.getEvents(jsx);
         return this.testObject;
       };
     }
@@ -213,7 +235,7 @@ class Parser implements ParserI {
 
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
-      console.log('mainChild', mainChild);
+      console.log('mainchidl', mainChild);
       let count = 1;
       return Promise.all(
         mainChild.map(async (jsx: string) => {
@@ -226,7 +248,8 @@ class Parser implements ParserI {
 
           const parser = new ParserHelper(newTestObject);
           const testObj = await parser.getTestObject(jsx);
-          console.log(testObj);
+          // eslint-disable-next-line no-magic-numbers
+          console.log(JSON.stringify(testObj, undefined, 2));
           return formatter.formatTestObject(testObj);
         })
       );

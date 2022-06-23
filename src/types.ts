@@ -11,6 +11,7 @@ export type AttributeType = {
   onInput?: boolean;
   type?: string;
   'data-testid'?: string;
+  children?: string; //text child only
   role?: string;
 };
 export type Attribute = {
@@ -30,7 +31,7 @@ export type TestObjectType = {
   Text?: TextChildren[];
   PlaceholderText?: TextChildren[];
   AltText?: TextChildren[];
-  events?: Attribute[];
+  elems?: Attribute[];
 };
 export type TestObject = {
   [key in keyof TestObjectType]: string | (TextChildren | Attribute)[];
