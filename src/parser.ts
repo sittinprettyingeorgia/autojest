@@ -50,6 +50,7 @@ class Parser implements ParserI {
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
+        //we need to assign current str as the name of our first attribute
         //remove any quotes and assign name
         str = str.replaceAll('"', '');
         str = str.replaceAll("'", '');
@@ -64,15 +65,11 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to remove all unused chars
-        if (str.includes(this.singleChild)) {
-          str = str.replaceAll(this.singleChild, '');
-          str = str.replaceAll(this.childrenKey, '');
-          str = str.replaceAll(this.dontKeep, '');
-        } else if (str.includes(this.multipleChild)) {
-          str = str.replaceAll(this.multipleChild, '');
-          str = str.replaceAll(this.childrenKey, '');
-          str = str.replaceAll(this.dontKeep, '');
-        }
+        str = str.replaceAll(this.childrenKey, '');
+        str = str.includes(this.singleChild)
+          ? str.replaceAll(this.singleChild, '')
+          : str.replaceAll(this.multipleChild, '');
+        str = str.replaceAll(this.dontKeep, '');
 
         //we need to push our parent attr on the stack and assign a new currentAttr
         this.elemStack.push(currentAttr);
@@ -82,40 +79,54 @@ class Parser implements ParserI {
         return ['', newAttr];
       };
 
-      handleClosingBracket = () => {};
+      handleAttribute = (
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //we need to handle attribute assignment(onclick,data-testid, etc)
+        str = str.replaceAll('"', '');
+        const [key, val] = str.split(':');
+        currentAttr[key.trim() as keyof Attribute] = val.trim();
+
+        return ['', currentAttr];
+      };
+
+      handleClosingBracket = (
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
+        const parentElem = this.elemStack.pop();
+        const [key, val] = str.split(':');
+        currentAttr[key as keyof Attribute] = val;
+        (this.testObject.elems as Attribute[]).push(currentAttr);
+        return ['', parentElem];
+      };
 
       handleChar = (
         char: string,
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        //we have encountered a key value pair
-        if (char === ',' && !str.includes('"') && str.includes(':')) {
-          //we need to handle attribute assignment(onclick,data-testid, etc)
-          const [key, val] = str.split(':');
-          currentAttr[key.trim() as keyof Attribute] = val.trim();
-          return ['', currentAttr];
-        } else if (char === '{' && !str.includes('children: ')) {
-          //we need to assign current str as the name of our first attribute
+        if (char === ',' && str.trim() && str.includes(':')) {
+          return this.handleAttribute(str, currentAttr);
+        } else if (char === '{' && !this.elemStack.length) {
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
         } else if (char === '}') {
-          //handle closing bracket
+          return this.handleClosingBracket(str, currentAttr);
         }
       };
 
       getEvents = (jsx: string) => {
-        const attr: Attribute = {};
+        let currentAttr: Attribute = {};
         let str = '';
         for (let i = 0; i < jsx.length; i++) {
           const char = jsx.charAt(i);
+          if (char === '(' || char === ')') continue;
 
-          str += char;
-
-          if (char === '{') {
-            attr.elemName = str;
-          }
+          [str, currentAttr] = this.handleChar(char, str, currentAttr);
         }
       };
 
@@ -206,10 +217,10 @@ class Parser implements ParserI {
       let count = 1;
       return Promise.all(
         mainChild.map(async (jsx: string) => {
-          const events: Attribute[] = [];
+          const elems: Attribute[] = [];
           const newTestObject = {
             name: component.name + ' ' + count++,
-            events,
+            elems,
           };
           const formatter = new Formatter();
 
