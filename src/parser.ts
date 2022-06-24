@@ -79,10 +79,10 @@ class Parser implements ParserI {
       ): [str: string, newAttr: Attribute] => {
         //we need to remove all unused chars
         str = str.replace(this.childrenKey, '');
-        str = str.replaceAll(this.singleChild, '');
         str = str.replaceAll(this.multipleChild, '');
-        str = str.replaceAll(this.single, '');
+        str = str.replaceAll(this.singleChild, '');
         str = str.replaceAll(this.multi, '');
+        str = str.replaceAll(this.single, '');
 
         str = str.replaceAll(this.dontKeep, '');
 
@@ -126,12 +126,19 @@ class Parser implements ParserI {
 
         if (key && val) currentAttr[key as keyof Attribute] = val;
 
-        if (currentAttr != null)
+        if (
+          currentAttr != null &&
+          !(this.testObject.elems as Attribute[]).includes(currentAttr)
+        )
           (this.testObject.elems as Attribute[]).push(currentAttr);
 
         this.commaFlag = false;
 
-        if (!this.elemStack.length && parentElem != null) {
+        if (
+          !this.elemStack.length &&
+          parentElem != null &&
+          !(this.testObject.elems as Attribute[]).includes(parentElem)
+        ) {
           (this.testObject.elems as Attribute[]).push(parentElem);
         }
 
