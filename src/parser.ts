@@ -87,7 +87,7 @@ class Parser implements ParserI {
         str = str.replaceAll(this.dontKeep, '');
 
         //we need to push our parent attr on the stack and assign a new currentAttr
-        this.elemStack.push(currentAttr);
+        if (currentAttr) this.elemStack.push(currentAttr);
         const newAttr: Attribute = {};
         newAttr.elemName = str.trim().replaceAll(this.dontKeep, '');
         this.commaFlag = true;
@@ -135,7 +135,7 @@ class Parser implements ParserI {
           (this.testObject.elems as Attribute[]).push(parentElem);
         }
 
-        return ['', parentElem];
+        return ['', parentElem]; //parentElem may be undefined
       };
 
       handleChar = (
@@ -147,21 +147,12 @@ class Parser implements ParserI {
           str += char;
         }
 
-        if (!str || str.search(/[a-zA-Z0-9"'_-]+/gi) < ZERO)
-          return [str, currentAttr];
-
-        if (
-          char === ',' &&
-          (str.includes(':') ||
-            str.includes('jsx_runtime_1.jsx') ||
-            str.includes('jsx_runtime_1.jsxs')) &&
-          this.commaFlag
-        ) {
-          return this.handleAttribute(str, currentAttr);
-        } else if (char === '{' && !this.pastFirst) {
+        if (char === '{' && !this.pastFirst) {
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
+        } else if (char === ',' && str && str.includes(':') && this.commaFlag) {
+          return this.handleAttribute(str, currentAttr);
         } else if (char === '}') {
           return this.handleClosingBracket(str, currentAttr);
         }
