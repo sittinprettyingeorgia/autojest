@@ -193,10 +193,12 @@ class Parser implements ParserI {
         const retrieveJsxsStartAndMiddleText =
           /([a-zA-Z0-9_.,\s:-]+(?=", "))/gi;
         const retrieveJsxsEndText = /((?<=("))[a\]-zA-Z0-9_.,\s:-]+(?="]))/gi;
+        const retrieveJsxOutsideText = /([a-zA-Z0-9_.,\s:-]+(?=", \())/gi;
         const results = [
           ...jsx.matchAll(retrieveJsxText),
           ...jsx.matchAll(retrieveJsxsStartAndMiddleText),
           ...jsx.matchAll(retrieveJsxsEndText),
+          ...jsx.matchAll(retrieveJsxOutsideText),
         ];
 
         return this.getTextChildren(results);
