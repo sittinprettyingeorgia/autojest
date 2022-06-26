@@ -1,5 +1,13 @@
 import Formatter from './formatter';
-import { Attribute, ParserI, TestObject, TextChildren, TextMap } from './types';
+import {
+  Attribute,
+  Flag,
+  ParserI,
+  TestObject,
+  TextChildren,
+  TextMap,
+  TextValue,
+} from './types';
 
 const initialSplitRegex =
   /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
@@ -178,7 +186,7 @@ class Parser implements ParserI {
         }
       };
 
-      getJsxText = async (jsx: string): Promise<TextChildren[]> => {
+      getJsxText = async (jsx: string): Promise<TextValue> => {
         //retrieves visible text
         const retrieveJsxText =
           /((?<=(children: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
@@ -194,14 +202,14 @@ class Parser implements ParserI {
         return this.getTextChildren(results);
       };
 
-      getPlaceholderText = async (jsx: string): Promise<TextChildren[]> => {
+      getPlaceholderText = async (jsx: string): Promise<TextValue> => {
         const retrievePlaceholderText =
           /((?<=(placeholder: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
         const results = Array.from(jsx.matchAll(retrievePlaceholderText));
         return this.getTextChildren(results);
       };
 
-      getAltText = async (jsx: string): Promise<TextChildren[]> => {
+      getAltText = async (jsx: string): Promise<TextValue> => {
         const retrieveAltText = /((?<=(alt: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
         const results = Array.from(jsx.matchAll(retrieveAltText));
         return this.getTextChildren(results);
@@ -209,8 +217,8 @@ class Parser implements ParserI {
 
       getTextChildren = async (
         matchArray: RegExpMatchArray[]
-      ): Promise<TextChildren[]> => {
-        const textChildren: TextChildren[] = [];
+      ): Promise<TextValue> => {
+        const textChildren: TextValue = {};
         const map: TextMap = {};
 
         //build map object so we can specify findAllByText or findByText based on # of occurrences.
@@ -226,11 +234,11 @@ class Parser implements ParserI {
 
         //assign textChildren to testObject
         for (const [key, val] of Object.entries(map)) {
-          const newTextChild: TextChildren = {
-            multiple: val > ONE,
-            value: key,
-          };
-          textChildren.push(newTextChild);
+          const multi = val > ONE;
+          textChildren[key] = multi;
+          if (multi) {
+            (this.testObject.multiple as TextValue)[key] = multi;
+          }
         }
 
         return textChildren;
@@ -272,9 +280,11 @@ class Parser implements ParserI {
       return Promise.all(
         mainChild.map(async (jsx: string) => {
           const elems: Attribute[] = [];
+          const multiple: TextValue = {};
           const newTestObject = {
             name: component.name + ' ' + count++,
             elems,
+            multiple,
           };
           const formatter = new Formatter();
 

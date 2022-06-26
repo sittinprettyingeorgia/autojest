@@ -11,6 +11,9 @@ export type AttributeType = {
   onInput?: boolean;
   type?: string;
   'data-testid'?: string;
+  PlaceholderText?: string;
+  AltText?: string;
+  Text?: string;
   children?: string; //text child only
   role?: string;
 };
@@ -25,21 +28,26 @@ export type TextChildren = {
   multiple: boolean;
   value: string;
 };
-
-export type TestObjectType = {
-  name: string;
-  Text?: TextChildren[];
-  PlaceholderText?: TextChildren[];
-  AltText?: TextChildren[];
-  elems?: Attribute[];
-};
-export type TestObject = {
-  [key in keyof TestObjectType]: string | (TextChildren | Attribute)[];
-};
-
 export interface Flag {
   [key: string]: string;
 }
+
+export interface TextValue {
+  [key: string]: boolean;
+}
+
+export type TestObjectType = {
+  name: string;
+  Text?: TextValue; // textValue : hasMultiple
+  PlaceholderText?: TextValue;
+  AltText?: TextValue;
+  multiple?: TextValue;
+  elems?: Attribute[];
+};
+export type TestObject = {
+  [key in keyof TestObjectType]: string | TextValue | Attribute[];
+};
+
 export interface ChildList {
   [key: string]: any;
 }
