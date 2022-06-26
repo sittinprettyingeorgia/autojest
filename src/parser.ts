@@ -103,6 +103,24 @@ class Parser implements ParserI {
         return ['', newAttr];
       };
 
+      handleKeyVal = (str: string): [key: string, val: string] => {
+        let [key, val] = str.split(':');
+        key = key.trim().replaceAll(this.dontKeep, '');
+        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+
+        const end = 'Text';
+        if (key === 'placeholder' || key === 'alt') {
+          return [
+            (key.charAt(0) as string).toUpperCase() + key.substring(1) + end,
+            val,
+          ];
+        } else if (key === 'children') {
+          return [end, val];
+        }
+
+        return [key, val];
+      };
+
       handleAttribute = (
         str: string,
         currentAttr: Attribute
@@ -118,19 +136,12 @@ class Parser implements ParserI {
         return ['', currentAttr];
       };
 
-      handleClosingBracket = (
-        str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
-        //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
-        let parentElem: Attribute;
-        if (this.elemStack.length) {
-          parentElem = this.elemStack.pop();
-        }
-
-        let [key, val] = str.split(':');
-        key = key.trim().replaceAll(this.dontKeep, '');
-        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+      handleElems = (
+        currentAttr: Attribute,
+        parentElem: Attribute,
+        str: string
+      ): void => {
+        const [key, val] = this.handleKeyVal(str);
 
         if (key && val) currentAttr[key as keyof Attribute] = val;
 
@@ -149,6 +160,19 @@ class Parser implements ParserI {
         ) {
           (this.testObject.elems as Attribute[]).push(parentElem);
         }
+      };
+
+      handleClosingBracket = (
+        str: string,
+        currentAttr: Attribute
+      ): [str: string, newAttr: Attribute] => {
+        //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
+        let parentElem: Attribute;
+        if (this.elemStack.length) {
+          parentElem = this.elemStack.pop();
+        }
+
+        this.handleElems(currentAttr, parentElem, str);
 
         return ['', parentElem]; //parentElem may be undefined
       };
