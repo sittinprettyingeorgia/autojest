@@ -1,41 +1,48 @@
 import Formatter from './formatter';
-import {
-  Attribute,
-  Flag,
-  ParserI,
-  TestObject,
-  TextChildren,
-  TextMap,
-  TextValue,
-} from './types';
+import { Attribute, ParserI, TestObject, TextMap, TextValue } from './types';
 
-const initialSplitRegex =
+const INIT_SPLIT =
   /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
-const jsxRegex =
+const JSX_REGEX =
   /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
-const initialSlice = 'return ((0, jsx_runtime_1.';
+const INIT_SLICE = 'return ((0, jsx_runtime_1.';
 const ZERO = 0;
 const ONE = 1;
-const onClickRegex =
+const ON_CLICK_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonClick\b)/gi;
-const onChangeRegex =
+const ON_CHANGE_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonChange\b)/gi;
-const onMouseOverRegex =
+const ON_MOUSE_OVER_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOver\b)/gi;
-const onMouseDownRegex =
+const ON_MOUSE_DOWN_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseDown\b)/gi;
-const onMouseOutRegex =
+const ON_MOUSE_OUT_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOut\b)/gi;
-const onKeyDownRegex =
+const ON_KEYDOWN_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyDown\b)/gi;
-const onKeyPressRegex =
+const ON_KEYPRESS_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyPress\b)/gi;
-const onInputRegex =
+const ON_INPUT_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonInput\b)/gi;
-const dataTestIdRegex =
+const DATA_TEST_ID_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bdataTestId\b)/gi;
-const roleRegex =
+const ROLE_REGEX =
   /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\brole\b)/gi;
+const SINGLE_CHILD = '(0, jsx_runtime_1.jsx)("';
+const MULTIPLE_CHILD = '(0, jsx_runtime_1.jsxs)("';
+const SINGLE = 'jsx_runtime_1.jsx';
+const MULTI = 'jsx_runtime_1.jsxs';
+const CHILDREN_KEY = '/children: ';
+const DONT_KEEP_REGEX = /[",\]0)([':]+/gi;
+const DONT_KEEP_MAP = {
+  '{': '{',
+  '}': '{',
+  '[': '[',
+  ']': ']',
+  ';': ';',
+  '"': '"',
+};
+
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 
@@ -53,30 +60,15 @@ class Parser implements ParserI {
         this.commaFlag = false;
       }
 
-      singleChild = '(0, jsx_runtime_1.jsx)("';
-      multipleChild = '(0, jsx_runtime_1.jsxs)("';
-      single = 'jsx_runtime_1.jsx';
-      multi = 'jsx_runtime_1.jsxs';
-      childrenKey = '/children: ';
-      dontKeep = /[",\]0)([':]+/gi;
-      DONT_KEEP = {
-        '{': '{',
-        '}': '{',
-        '[': '[',
-        ']': ']',
-        ';': ';',
-        '"': '"',
-      };
-
       handleFirstOpeningBracket = (
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to assign current str as the name of our first attribute
-        currentAttr.elemName = str.trim().replaceAll(this.dontKeep, '');
+        currentAttr.elemName = str.trim().replaceAll(DONT_KEEP_REGEX, '');
         str = '';
-        this.pastFirst = true;
-        this.commaFlag = true;
+        this.pastFirst = true; //are we past the mainChild?
+        this.commaFlag = true; //are we within an elements attributes or not.
 
         return [str, currentAttr];
       };
@@ -86,18 +78,19 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to remove all unused chars
-        str = str.replace(this.childrenKey, '');
-        str = str.replaceAll(this.multipleChild, '');
-        str = str.replaceAll(this.singleChild, '');
-        str = str.replaceAll(this.multi, '');
-        str = str.replaceAll(this.single, '');
+        /* TODO: this should be simplified to a single regex*/
+        str = str.replace(CHILDREN_KEY, '');
+        str = str.replaceAll(MULTIPLE_CHILD, '');
+        str = str.replaceAll(SINGLE_CHILD, '');
+        str = str.replaceAll(MULTI, '');
+        str = str.replaceAll(SINGLE, '');
 
-        str = str.replaceAll(this.dontKeep, '');
+        str = str.replaceAll(DONT_KEEP_REGEX, '');
 
         //we need to push our parent attr on the stack and assign a new currentAttr
         if (currentAttr) this.elemStack.push(currentAttr);
         const newAttr: Attribute = {};
-        newAttr.elemName = str.trim().replaceAll(this.dontKeep, '');
+        newAttr.elemName = str.trim().replaceAll(DONT_KEEP_REGEX, '');
         this.commaFlag = true;
 
         return ['', newAttr];
@@ -105,8 +98,8 @@ class Parser implements ParserI {
 
       handleKeyVal = (str: string): [key: string, val: string] => {
         let [key, val] = str.split(':');
-        key = key.trim().replaceAll(this.dontKeep, '');
-        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+        key = key.trim().replaceAll(DONT_KEEP_REGEX, '');
+        val = val ? val.trim().replaceAll(DONT_KEEP_REGEX, '') : val;
 
         const end = 'Text';
         if (key === 'placeholder' || key === 'alt') {
@@ -128,8 +121,8 @@ class Parser implements ParserI {
         //we need to handle attribute assignment(onclick,data-testid, etc)
         str = str.replaceAll('"', '');
         let [key, val] = str.split(':');
-        key = key.trim().replaceAll(this.dontKeep, '');
-        val = val ? val.trim().replaceAll(this.dontKeep, '') : val;
+        key = key.trim().replaceAll(DONT_KEEP_REGEX, '');
+        val = val ? val.trim().replaceAll(DONT_KEEP_REGEX, '') : val;
 
         if (key && val) currentAttr[key.trim() as keyof Attribute] = val.trim();
 
@@ -182,7 +175,7 @@ class Parser implements ParserI {
         str: string,
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        if (!(char in this.DONT_KEEP)) {
+        if (!(char in DONT_KEEP_MAP)) {
           str += char;
         }
 
@@ -293,11 +286,9 @@ class Parser implements ParserI {
       component: () => JSX.Element
     ): Promise<string[]> => {
       const compString = component.toString();
-      const mainChild = compString
-        .split(initialSplitRegex)
-        .filter((item: string) => {
-          return Boolean(item) && !item.startsWith(initialSlice);
-        });
+      const mainChild = compString.split(INIT_SPLIT).filter((item: string) => {
+        return Boolean(item) && !item.startsWith(INIT_SLICE);
+      });
 
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string

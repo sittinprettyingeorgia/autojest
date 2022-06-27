@@ -1,11 +1,4 @@
-import {
-  TestObject,
-  FormatterI,
-  TextChildren,
-  Attribute,
-  Flag,
-  TextValue,
-} from './types';
+import { TestObject, FormatterI, Flag, TextValue } from './types';
 
 class Formatter implements FormatterI {
   formatTestObject: (testObj: TestObject) => string;
@@ -33,11 +26,13 @@ class Formatter implements FormatterI {
           continue;
         }
 
-        for (const textChild of val as TextChildren[]) {
-          if (textChild.multiple) {
-            renderingTests += `\t\tfor(const item of await screen.findAllBy${key}('${textChild.value}')) {\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}\n`;
+        for (const [textChild, hasMultiple] of Object.entries(
+          val as TextValue
+        )) {
+          if (hasMultiple) {
+            renderingTests += `\t\tfor(const item of await screen.findAllBy${key}('${textChild}')) {\n\t\t\texpect(item).toBeInTheDocument();\n\t\t}\n`;
           } else {
-            renderingTests += `\t\texpect(await screen.findBy${key}('${textChild.value}')).toBeInTheDocument();\n`;
+            renderingTests += `\t\texpect(await screen.findBy${key}('${textChild}')).toBeInTheDocument();\n`;
           }
         }
       }
