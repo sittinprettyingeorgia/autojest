@@ -34,11 +34,12 @@ const SINGLE = 'jsx_runtime_1.jsx';
 const MULTI = 'jsx_runtime_1.jsxs';
 const CHILDREN_KEY = '/children: ';
 const DONT_KEEP_REGEX = /[",\]0)([':]+/gi;
+const MATCH_TEXT_CHILD = /("[a-zA-z0-9_-\s]+"(?=, \(0))/gi;
 const DONT_KEEP_MAP = {
   '{': '{',
   '}': '{',
-  '[': '[',
-  ']': ']',
+  //'[': '[',
+  //']': ']',
   ';': ';',
   '"': '"',
 };
@@ -52,12 +53,14 @@ class Parser implements ParserI {
       elemStack: Attribute[];
       pastFirst: boolean;
       commaFlag: boolean;
+      possibleTextChild: boolean;
 
       constructor(testObject: TestObject) {
         this.testObject = testObject;
         this.elemStack = [];
         this.pastFirst = false;
         this.commaFlag = false;
+        this.possibleTextChild = false;
       }
 
       handleFirstOpeningBracket = (
@@ -170,10 +173,28 @@ class Parser implements ParserI {
         return ['', parentElem]; //parentElem may be undefined
       };
 
+      handlePossibleTextChildAtStart = (
+        str: string,
+        currentAttr: Attribute,
+        currentIndex: number,
+        jsx: string
+      ): [str: string, newAttr: Attribute] => {
+        const substring = jsx.substring(currentIndex - str.length);
+
+        if (
+          !str.includes(SINGLE || MULTI) &&
+          substring.search(MATCH_TEXT_CHILD) >= 0
+        ) {
+          //REGEX MATCH FORWARD
+        }
+      };
+
       handleChar = (
         char: string,
         str: string,
-        currentAttr: Attribute
+        currentAttr: Attribute,
+        currentIndex?: number,
+        jsx?: string
       ): [str: string, newAttr: Attribute] => {
         if (!(char in DONT_KEEP_MAP)) {
           str += char;
@@ -183,10 +204,22 @@ class Parser implements ParserI {
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
+        } else if (char === ',' && str && this.possibleTextChild) {
+          //we need to handle possible text child here
+          return this.handlePossibleTextChildAtStart(
+            str,
+            currentAttr,
+            currentIndex,
+            jsx
+          );
         } else if (char === ',' && str && str.includes(':') && this.commaFlag) {
           return this.handleAttribute(str, currentAttr);
         } else if (char === '}') {
           return this.handleClosingBracket(str, currentAttr);
+        } else if (char === '[') {
+          this.possibleTextChild = true;
+        } else if (char === ']') {
+          //we should check if current string has text child.
         }
 
         return [str, currentAttr];
@@ -199,7 +232,7 @@ class Parser implements ParserI {
         for (let i = 0; i < jsx.length; i++) {
           const char = jsx.charAt(i);
 
-          [str, currentAttr] = this.handleChar(char, str, currentAttr);
+          [str, currentAttr] = this.handleChar(char, str, currentAttr, i, jsx);
         }
       };
 
