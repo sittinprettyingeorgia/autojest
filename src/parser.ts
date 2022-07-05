@@ -1,49 +1,20 @@
+import {
+  DONT_KEEP_REGEX,
+  CHILDREN_KEY,
+  MULTIPLE_CHILD,
+  SINGLE_CHILD,
+  MULTI,
+  SINGLE,
+  DONT_KEEP_MAP,
+  MATCH_TEXT_CHILD,
+  ZERO,
+  ONE,
+  INIT_SPLIT,
+  INIT_SLICE,
+} from 'constant';
+import TextHandler from 'TextHandler';
 import Formatter from './formatter';
 import { Attribute, ParserI, TestObject, TextMap, TextValue } from './types';
-
-const INIT_SPLIT =
-  /(return \(\(0, jsx_runtime_1\.jsxs\)\()|(return \(\(0, jsx_runtime_1\.jsx\)\()/gi;
-const JSX_REGEX =
-  /(\n)|(\(0, jsx_runtime_1\.jsxs\)\()|(\(0, jsx_runtime_1\.jsx\)\()/gi;
-const INIT_SLICE = 'return ((0, jsx_runtime_1.';
-const ZERO = 0;
-const ONE = 1;
-const ON_CLICK_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonClick\b)/gi;
-const ON_CHANGE_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonChange\b)/gi;
-const ON_MOUSE_OVER_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOver\b)/gi;
-const ON_MOUSE_DOWN_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseDown\b)/gi;
-const ON_MOUSE_OUT_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonMouseOut\b)/gi;
-const ON_KEYDOWN_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyDown\b)/gi;
-const ON_KEYPRESS_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonKeyPress\b)/gi;
-const ON_INPUT_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bonInput\b)/gi;
-const DATA_TEST_ID_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\bdataTestId\b)/gi;
-const ROLE_REGEX =
-  /(")[}a-zA-Z0-9{_.",\s:-]+(")[:,]+(?=[}a-zA-Z0-9{_.",\s:-]*\brole\b)/gi;
-const SINGLE_CHILD = '(0, jsx_runtime_1.jsx)("';
-const MULTIPLE_CHILD = '(0, jsx_runtime_1.jsxs)("';
-const SINGLE = 'jsx_runtime_1.jsx';
-const MULTI = 'jsx_runtime_1.jsxs';
-const CHILDREN_KEY = '/children: ';
-const DONT_KEEP_REGEX = /[",\]0)([':]+/gi;
-const MATCH_TEXT_CHILD = /("[a-zA-z0-9_-\s]+"(?=, \(0))/gi;
-const DONT_KEEP_MAP = {
-  '{': '{',
-  '}': '{',
-  //'[': '[',
-  //']': ']',
-  ';': ';',
-  '"': '"',
-};
-
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 
@@ -132,11 +103,8 @@ class Parser implements ParserI {
         return ['', currentAttr];
       };
 
-      handleElems = (
-        currentAttr: Attribute,
-        parentElem: Attribute,
-        str: string
-      ): void => {
+      handleElems = (currentAttr: Attribute, str: string): void => {
+        const parentElem = this.getParent();
         const [key, val] = this.handleKeyVal(str);
 
         if (key && val) currentAttr[key as keyof Attribute] = val;
@@ -150,12 +118,24 @@ class Parser implements ParserI {
         this.commaFlag = false;
 
         if (
-          !this.elemStack.length &&
-          parentElem != null &&
+          this.elemStack.length < 1 &&
+          parentElem !== null &&
           !(this.testObject.elems as Attribute[]).includes(parentElem)
         ) {
           (this.testObject.elems as Attribute[]).push(parentElem);
         }
+      };
+
+      getParent = (): Attribute => {
+        let parentElem: Attribute;
+        if (this.elemStack.length > 0) {
+          parentElem = this.elemStack.pop();
+          if (parentElem === null || parentElem === undefined) {
+            parentElem = {} as Attribute;
+          }
+        }
+
+        return parentElem;
       };
 
       handleClosingBracket = (
@@ -163,30 +143,25 @@ class Parser implements ParserI {
         currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
         //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
-        let parentElem: Attribute;
-        if (this.elemStack.length) {
-          parentElem = this.elemStack.pop();
-        }
+        const parentElem = this.getParent();
+        this.handleElems(currentAttr, str);
 
-        this.handleElems(currentAttr, parentElem, str);
-
-        return ['', parentElem]; //parentElem may be undefined
+        return ['', parentElem];
       };
 
       handlePossibleTextChildAtStart = (
         str: string,
-        currentAttr: Attribute,
-        currentIndex: number,
-        jsx: string
+        currentAttr: Attribute
       ): [str: string, newAttr: Attribute] => {
-        const substring = jsx.substring(currentIndex - str.length);
+        const parentElem = this.getParent();
 
-        if (
-          !str.includes(SINGLE || MULTI) &&
-          substring.search(MATCH_TEXT_CHILD) >= 0
-        ) {
-          //REGEX MATCH FORWARD
+        if (!str.includes(SINGLE || MULTI)) {
+          //console.log('handle text child start');
+          this.handleElems(currentAttr, str);
         }
+
+        this.possibleTextChild = false;
+        return ['', parentElem];
       };
 
       handleChar = (
@@ -200,19 +175,31 @@ class Parser implements ParserI {
           str += char;
         }
 
+        //REGEX match forward
+        const isTextChild = jsx
+          .substring(
+            currentIndex - str.length + 1,
+            currentIndex + str.length + 7
+          )
+          .search(MATCH_TEXT_CHILD);
+
+        if (!str) {
+          return ['', currentAttr];
+        }
+
+        if (char === ',') {
+          //console.log('str', str);
+          //console.log('currentAttr:', currentAttr && currentAttr.elemName);
+        }
+
         if (char === '{' && !this.pastFirst) {
           return this.handleFirstOpeningBracket(str, currentAttr);
         } else if (char === '{') {
           return this.handleOpeningBracket(str, currentAttr);
-        } else if (char === ',' && str && this.possibleTextChild) {
+        } else if (char === ',' && currentAttr && isTextChild >= 0) {
           //we need to handle possible text child here
-          return this.handlePossibleTextChildAtStart(
-            str,
-            currentAttr,
-            currentIndex,
-            jsx
-          );
-        } else if (char === ',' && str && str.includes(':') && this.commaFlag) {
+          return this.handlePossibleTextChildAtStart(str, currentAttr);
+        } else if (char === ',' && str.includes(':') && this.commaFlag) {
           return this.handleAttribute(str, currentAttr);
         } else if (char === '}') {
           return this.handleClosingBracket(str, currentAttr);
@@ -236,80 +223,9 @@ class Parser implements ParserI {
         }
       };
 
-      getJsxText = async (jsx: string): Promise<TextValue> => {
-        //retrieves visible text
-        const retrieveJsxText =
-          /((?<=(children: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
-        const retrieveJsxsStartAndMiddleText =
-          /([a-zA-Z0-9_.,\s:-]+(?=", "))/gi;
-        const retrieveJsxsEndText = /((?<=("))[a\]-zA-Z0-9_.,\s:-]+(?="]))/gi;
-        const retrieveJsxOutsideText = /([a-zA-Z0-9_.,\s:-]+(?=", \())/gi;
-        const results = [
-          ...jsx.matchAll(retrieveJsxText),
-          ...jsx.matchAll(retrieveJsxsStartAndMiddleText),
-          ...jsx.matchAll(retrieveJsxsEndText),
-          ...jsx.matchAll(retrieveJsxOutsideText),
-        ];
-
-        return this.getTextChildren(results);
-      };
-
-      getPlaceholderText = async (jsx: string): Promise<TextValue> => {
-        const retrievePlaceholderText =
-          /((?<=(placeholder: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
-        const results = Array.from(jsx.matchAll(retrievePlaceholderText));
-        return this.getTextChildren(results);
-      };
-
-      getAltText = async (jsx: string): Promise<TextValue> => {
-        const retrieveAltText = /((?<=(alt: "))[a-zA-Z0-9_.",\s:-]+(?=" ))/gi;
-        const results = Array.from(jsx.matchAll(retrieveAltText));
-        return this.getTextChildren(results);
-      };
-
-      getTextChildren = async (
-        matchArray: RegExpMatchArray[]
-      ): Promise<TextValue> => {
-        const textChildren: TextValue = {};
-        const map: TextMap = {};
-
-        //build map object so we can specify findAllByText or findByText based on # of occurrences.
-        for (const regArr of matchArray) {
-          const str = regArr[ZERO];
-
-          if (str in map) {
-            map[str]++;
-          } else {
-            map[str] = 1;
-          }
-        }
-
-        //assign textChildren to testObject
-        for (const [key, val] of Object.entries(map)) {
-          const multi = val > ONE;
-          textChildren[key] = multi;
-          if (multi) {
-            (this.testObject.multiple as TextValue)[key] = multi;
-          }
-        }
-
-        return textChildren;
-      };
-
-      getTextElements = async (jsx: string): Promise<void> => {
-        const [def, placeholder, alt] = await Promise.all([
-          this.getJsxText(jsx),
-          this.getPlaceholderText(jsx),
-          this.getAltText(jsx),
-        ]);
-
-        this.testObject['Text'] = def;
-        this.testObject['PlaceholderText'] = placeholder;
-        this.testObject['AltText'] = alt;
-      };
-
       getTestObject = async (jsx: string): Promise<TestObject> => {
-        await this.getTextElements(jsx);
+        const textHandler = new TextHandler(this.testObject);
+        await textHandler.getTextElements(jsx);
         this.getEvents(jsx);
         return this.testObject;
       };

@@ -60,6 +60,10 @@ export interface ParserI {
 export interface FormatterI {
   formatTestObject: (testObj: TestObject) => string;
 }
+
+export interface TextHandlerI {
+  getTextElements: (jsx: string, testObject: TestObject) => Promise<TestObject>;
+}
 export interface FileWriterI {
   writeFile: () => void;
 }

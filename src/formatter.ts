@@ -7,6 +7,11 @@ class Formatter implements FormatterI {
   constructor() {
     this.eventMocks = {};
 
+    const SKIP = {
+      name: 'name',
+      elems: 'elems',
+      multiple: 'multiple',
+    };
     const getRenderingStart = (name: string): string => {
       return (
         `describe('testing ${name} component', () => {\n` +
@@ -22,7 +27,7 @@ class Formatter implements FormatterI {
     const getRenderingTests = (testObject: TestObject): string => {
       let renderingTests = '';
       for (const [key, val] of Object.entries(testObject)) {
-        if (key === 'name' || key === 'elems') {
+        if (key in SKIP) {
           continue;
         }
 
@@ -95,8 +100,9 @@ class Formatter implements FormatterI {
     };*/
 
     this.formatTestObject = (testObj: TestObject): string => {
+      const testObjName = (testObj.name as string).split(' ')[0];
       return (
-        getRenderingStart(testObj.name as unknown as string) +
+        getRenderingStart(testObjName) +
         getRenderingTests(testObj) +
         getRenderingEnd()
       );
