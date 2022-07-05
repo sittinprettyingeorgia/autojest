@@ -7,14 +7,12 @@ import {
   SINGLE,
   DONT_KEEP_MAP,
   MATCH_TEXT_CHILD,
-  ZERO,
-  ONE,
   INIT_SPLIT,
   INIT_SLICE,
 } from 'constant';
 import TextHandler from 'TextHandler';
 import Formatter from './formatter';
-import { Attribute, ParserI, TestObject, TextMap, TextValue } from './types';
+import { Attribute, ParserI, TestObject, TextValue } from './types';
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 
