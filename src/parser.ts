@@ -240,6 +240,7 @@ class Parser implements ParserI {
       /*TODO: we should save eventLogic in case we want to attempt templates for event handling results*/
       const eventLogicString = mainChild.shift(); //removes logic from component string
       console.log('mainchidl', mainChild);
+
       let count = 1;
       return Promise.all(
         mainChild.map(async (jsx: string) => {
@@ -255,7 +256,7 @@ class Parser implements ParserI {
           const parser = new ParserHelper(newTestObject);
           const testObj = await parser.getTestObject(jsx);
           // eslint-disable-next-line no-magic-numbers
-          console.log(JSON.stringify(testObj, undefined, 2));
+          if (count == 3) console.log(JSON.stringify(testObj, undefined, 2));
           return formatter.formatTestObject(testObj);
         })
       );
