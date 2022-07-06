@@ -18,5 +18,7 @@ describe('Testing inner functions', () => {
     attr = {};
   });
 
-  describe('testing handleFirstOpeningBracket', () => {});
+  describe('testing handleFirstOpeningBracket', () => {
+    const testStrs = ['"div", '];
+  });
 });
