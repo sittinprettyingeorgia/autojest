@@ -2,8 +2,8 @@
 import Parser from '../Parser';
 import { Fragment, useState } from 'react';
 
-const TestApp = () => {
-  const [state1, setState1] = useState(false);
+export const TestApp = () => {
+  const [state1, setState1] = useState(true);
   const [state2, setState2] = useState(false);
 
   const handleClick1 = () => {
@@ -20,6 +20,7 @@ const TestApp = () => {
         onClick={handleClick1}
         onChange={handleClick1}
         onMouseEnter={handleClick1}
+        data-testid="divP"
       >
         <input type="text" placeholder="test placeholder1" />
         <div onClick={handleClick1} data-testid="div1">
@@ -234,21 +235,9 @@ describe('testing parser', () => {
     parser = new Parser();
   });
   describe('testing cleanComponent method', () => {
-    /*it('should correctly clean a simple functional component', async () => {
-      const results = await parser.parseComponent(TestComponent2);
-      expect(results).toEqual(cleanComp2TestResult);
-    });*/
-    it('should correctly clean a conditional rendering functional component', async () => {
+    it.skip('should correctly clean a simple functional component', async () => {
       const results = await parser.parseComponent(TestApp);
-      expect(results).toEqual(cleanTestAppTestResult);
+      expect(results).toEqual(cleanComp2TestResult);
     });
-    /*it('should correctly clean a functional component with text outside of immediate jsx', async () => {
-      const results = parser.cleanComponent(SimpleTextOutsideJsx);
-      expect(results).toEqual(testCleanSimpleTextOutsideJsx);
-    });
-    it('should correctly clean a functional component with text outside of immediate jsx and placeholder text', async () => {
-      const results = parser.cleanComponent(SimpleWithPlaceholderText);
-      expect(results).toEqual(testCleanSimpleWithPlaceholderText);
-    });*/
   });
 });

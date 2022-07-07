@@ -1,7 +1,53 @@
-import React from 'react';
-export interface BracketString {
+export type AttributeType = {
+  elemName?: string; // div, p, span etc.
+  onClick?: boolean;
+  onChange?: boolean;
+  onMouseOver?: boolean;
+  onMouseDown?: boolean;
+  onMouseOut?: boolean;
+  onKeyDown?: boolean;
+  onKeyPress?: boolean;
+  onBlur?: boolean;
+  onInput?: boolean;
+  type?: string;
+  'data-testid'?: string;
+  PlaceholderText?: string;
+  AltText?: string;
+  Text?: string;
+  children?: string; //text child only
+  role?: string;
+};
+export type Attribute = {
+  [key in keyof AttributeType]: string | boolean;
+};
+
+export type TextMap = {
+  [key: string]: number;
+};
+export type TextChildren = {
+  multiple: boolean;
+  value: string;
+};
+export interface Flag {
   [key: string]: string;
 }
+
+export interface TextValue {
+  [key: string]: boolean;
+}
+
+export type TestObjectType = {
+  name: string;
+  Text?: TextValue; // textValue : hasMultiple
+  PlaceholderText?: TextValue;
+  AltText?: TextValue;
+  multiple?: TextValue;
+  elems?: Attribute[];
+};
+export type TestObject = {
+  [key in keyof TestObjectType]: string | TextValue | Attribute[];
+};
+
 export interface ChildList {
   [key: string]: any;
 }
@@ -9,10 +55,14 @@ export interface AutoJestI {
   parseComponent: (component: () => JSX.Element) => ChildList;
 }
 export interface ParserI {
-  parseComponent: (component: () => JSX.Element) => ChildList;
+  parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 }
 export interface FormatterI {
-  formatComponent: () => string;
+  formatTestObject: (testObj: TestObject) => string;
+}
+
+export interface TextHandlerI {
+  getTextElements: (jsx: string, testObject: TestObject) => Promise<TestObject>;
 }
 export interface FileWriterI {
   writeFile: () => void;
@@ -27,39 +77,4 @@ export interface ElemMap {
  */
 export type ChildrenType = {
   children: (string | object)[];
-};
-
-export type AttributeType = {
-  elemName: string; // div, p, span etc.
-  onClick?: boolean;
-  onChange?: boolean;
-  onMouseOver?: boolean;
-  onMouseDown?: boolean;
-  onMouseOut?: boolean;
-  onKeyDown?: boolean;
-  onKeyPress?: boolean;
-  onBlur?: boolean;
-  onInput?: boolean;
-  'data-testid'?: string;
-  role?: string;
-};
-export type Attribute = {
-  [key in keyof AttributeType]: string | boolean;
-};
-
-export type TextMap = {
-  [key: string]: number;
-};
-export type TextChildren = {
-  multiple: boolean;
-  value: string;
-};
-export type TestObjectType = {
-  jsxText?: TextChildren[];
-  placeholderText?: TextChildren[];
-  altText?: TextChildren[];
-  events?: Attribute[];
-};
-export type TestObject = {
-  [key in keyof TestObjectType]: TextChildren[] | Attribute[];
 };
