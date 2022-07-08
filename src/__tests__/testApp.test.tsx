@@ -1,5 +1,6 @@
 import { screen, render } from '@testing-library/react';
 import { TestApp } from './parser.test';
+
 describe('testing TestApp component', () => {
   it('should render all visible elements', async () => {
     render(<TestApp />);
