@@ -11,13 +11,18 @@ import {
 import { Attribute, TestObject } from 'types';
 
 const testObject: TestObject = { name: 'test' };
-const elemStack: Attribute[] = [];
+//const elemStack: Attribute[] = [];
 let pastFirst = false;
 let commaFlag = false;
-let possibleTextChild = false;
+const possibleTextChild = false;
 
-const getParent = (): Attribute => {
+/**
+ *
+ * @returns Attribute the parent element of our current element or a new Attribute object.
+ */
+/*const getParent = (): Attribute => {
   let parentElem: Attribute;
+
   if (elemStack.length > 0) {
     parentElem = elemStack.pop();
     if (parentElem === null || parentElem === undefined) {
@@ -26,8 +31,14 @@ const getParent = (): Attribute => {
   }
 
   return parentElem;
-};
+};*/
 
+/**
+ *
+ * @param str : string, characters collected up until this point.
+ * @param currentAttr : Attribute, our first Attribute.
+ * @returns Array [string, Attribute] : a new string and a named Attribute.
+ */
 export const handleFirstOpeningBracket = (
   str: string,
   currentAttr: Attribute
@@ -41,9 +52,17 @@ export const handleFirstOpeningBracket = (
   return [str, currentAttr];
 };
 
+/**
+ * Pushes current Attribute on to the stack and returns a new named Attribute.
+ *
+ * @param str : string, characters collected up until this point.
+ * @param currentAttr : Attribute, our current Attribute.
+ * @returns Array [string, Attribute] :
+ */
 export const handleOpeningBracket = (
   str: string,
-  currentAttr: Attribute
+  currentAttr: Attribute,
+  elemStack: Attribute[]
 ): [str: string, newAttr: Attribute] => {
   //we need to remove all unused chars
   /* TODO: this should be simplified to a single regex*/
@@ -63,7 +82,7 @@ export const handleOpeningBracket = (
 
   return ['', newAttr];
 };
-
+/*
 export const handleKeyVal = (str: string): [key: string, val: string] => {
   let [key, val] = str.split(':');
   key = key.trim().replaceAll(DONT_KEEP_REGEX, '');
@@ -195,3 +214,4 @@ export const handleChar = (
 
   return [str, currentAttr];
 };
+*/
