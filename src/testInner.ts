@@ -70,9 +70,8 @@ export const handleOpeningBracket = (
   str = str.replaceAll(MULTIPLE_CHILD, '');
   str = str.replaceAll(SINGLE_CHILD, '');
   str = str.replaceAll(MULTI, '');
-  str = str.replaceAll(SINGLE, '');
-
-  str = str.replaceAll(DONT_KEEP_REGEX, '');
+  /*str = str.replaceAll(SINGLE, '');
+  str = str.replaceAll(DONT_KEEP_REGEX, '');*/
 
   //we need to push our parent attr on the stack and assign a new currentAttr
   if (currentAttr) elemStack.push(currentAttr);

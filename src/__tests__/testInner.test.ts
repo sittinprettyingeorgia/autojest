@@ -81,6 +81,7 @@ describe('Testing inner functions', () => {
         '(0, jsx_runtime_1.jsxs)("label",',
         ' children: (0, jsx_runtime_1.jsxs)("div", ',
         ' (0, jsx_runtime_1.jsx)("span", ',
+        'children: [(0, jsx_runtime_1.jsx)("input"',
       ];
       let elemStack: Attribute[] = [];
       currentAttr = {
@@ -98,6 +99,9 @@ describe('Testing inner functions', () => {
         },
         {
           elemName: 'span',
+        },
+        {
+          elemName: 'input',
         },
       ];
 

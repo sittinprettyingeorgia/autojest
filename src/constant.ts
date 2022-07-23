@@ -29,7 +29,7 @@ export const SINGLE_CHILD = '(0, jsx_runtime_1.jsx)("';
 export const MULTIPLE_CHILD = '(0, jsx_runtime_1.jsxs)("';
 export const SINGLE = 'jsx_runtime_1.jsx';
 export const MULTI = 'jsx_runtime_1.jsxs';
-export const CHILDREN_KEY = '/children: ';
+export const CHILDREN_KEY = 'children: ';
 export const DONT_KEEP_REGEX = /[",\]0)([':]+/gi;
 export const MATCH_TEXT_CHILD = /("[a-zA-z0-9_\s-]+"(?=, \(0))/gi;
 export const DONT_KEEP_MAP = {
