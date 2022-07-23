@@ -40,3 +40,5 @@ export const DONT_KEEP_MAP = {
   ';': ';',
   '"': '"',
 };
+export const UNWANTED_OPENING_BRACKET_CHARS =
+  /(\(0, jsx_runtime_1\.jsx\)\("|\(0, jsx_runtime_1\.jsxs\)\("|children: |[",\]0)([':]+)/gi;

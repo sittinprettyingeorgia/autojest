@@ -65,14 +65,15 @@ export const handleOpeningBracket = (
   elemStack: Attribute[]
 ): [str: string, newAttr: Attribute] => {
   //we need to remove all unused chars
-  /* TODO: this should be simplified to a single regex*/
+  /* TODO: this should be simplified to a single regex
   str = str.replace(CHILDREN_KEY, '');
   str = str.replaceAll(MULTIPLE_CHILD, '');
   str = str.replaceAll(SINGLE_CHILD, '');
-  str = str.replaceAll(MULTI, '');
-  /*str = str.replaceAll(SINGLE, '');
   str = str.replaceAll(DONT_KEEP_REGEX, '');*/
-
+  str = str.replaceAll(
+    /(\(0, jsx_runtime_1\.jsx\)\("|\(0, jsx_runtime_1\.jsxs\)\("|children: )/gi,
+    ''
+  );
   //we need to push our parent attr on the stack and assign a new currentAttr
   if (currentAttr) elemStack.push(currentAttr);
   const newAttr: Attribute = {};
