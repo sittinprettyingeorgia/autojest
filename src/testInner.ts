@@ -1,13 +1,4 @@
-import {
-  DONT_KEEP_REGEX,
-  CHILDREN_KEY,
-  MULTIPLE_CHILD,
-  SINGLE_CHILD,
-  MULTI,
-  SINGLE,
-  DONT_KEEP_MAP,
-  MATCH_TEXT_CHILD,
-} from 'constant';
+import { DONT_KEEP_REGEX, UNWANTED_OPENING_BRACKET_CHARS } from 'constant';
 import { Attribute, TestObject } from 'types';
 
 const testObject: TestObject = { name: 'test' };
@@ -64,25 +55,20 @@ export const handleOpeningBracket = (
   currentAttr: Attribute,
   elemStack: Attribute[]
 ): [str: string, newAttr: Attribute] => {
-  //we need to remove all unused chars
-  /* TODO: this should be simplified to a single regex
-  str = str.replace(CHILDREN_KEY, '');
-  str = str.replaceAll(MULTIPLE_CHILD, '');
-  str = str.replaceAll(SINGLE_CHILD, '');
-  str = str.replaceAll(DONT_KEEP_REGEX, '');*/
-  str = str.replaceAll(
-    /(\(0, jsx_runtime_1\.jsx\)\("|\(0, jsx_runtime_1\.jsxs\)\("|children: )/gi,
-    ''
-  );
+  str = str.replace(UNWANTED_OPENING_BRACKET_CHARS, '');
+  str = str.replace(DONT_KEEP_REGEX, '').trim();
+
   //we need to push our parent attr on the stack and assign a new currentAttr
-  if (currentAttr) elemStack.push(currentAttr);
-  const newAttr: Attribute = {};
-  newAttr.elemName = str.trim().replaceAll(DONT_KEEP_REGEX, '');
+  if (currentAttr) {
+    elemStack.push(currentAttr);
+  }
+
+  const newAttr: Attribute = { elemName: str };
   commaFlag = true;
 
   return ['', newAttr];
 };
-/*
+
 export const handleKeyVal = (str: string): [key: string, val: string] => {
   let [key, val] = str.split(':');
   key = key.trim().replaceAll(DONT_KEEP_REGEX, '');
@@ -100,7 +86,7 @@ export const handleKeyVal = (str: string): [key: string, val: string] => {
 
   return [key, val];
 };
-
+/*
 export const handleAttribute = (
   str: string,
   currentAttr: Attribute

@@ -114,6 +114,7 @@ describe('Testing inner functions', () => {
         //TODO: childrenKey regex is failing
         expect(newAttr.elemName).toBe(newAttrResults[i].elemName);
         expect(newAttr).toEqual(newAttrResults[i]);
+        expect(str).toBe('');
       }
     });
   });
