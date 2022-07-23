@@ -64,7 +64,7 @@ export const handleOpeningBracket = (
   }
 
   const newAttr: Attribute = { elemName: str };
-  commaFlag = true;
+  commaFlag = true; //figure out a way without the flag.
 
   return ['', newAttr];
 };
