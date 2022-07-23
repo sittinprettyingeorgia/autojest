@@ -1,4 +1,8 @@
-import { handleFirstOpeningBracket, handleOpeningBracket } from 'testInner';
+import {
+  handleFirstOpeningBracket,
+  handleKeyVal,
+  handleOpeningBracket,
+} from 'testInner';
 import { Attribute } from 'types';
 import {
   DONT_KEEP_REGEX,
@@ -115,6 +119,33 @@ describe('Testing inner functions', () => {
         expect(newAttr.elemName).toBe(newAttrResults[i].elemName);
         expect(newAttr).toEqual(newAttrResults[i]);
         expect(str).toBe('');
+      }
+    });
+  });
+
+  describe('testing handleKeyVal ', () => {
+    it('should split an elements attributes keys correctly', () => {
+      const strs = [
+        ' onClick: handleClick1',
+        'onChange: handleClick1',
+        'onMouseEnter: handleClick1',
+        'placeholder: "test placeholder1"',
+        'type: "text"',
+      ];
+      const expectedResults = [
+        ['onClick', 'handleClick1'],
+        ['onChange', 'handleClick1'],
+        ['onMouseEnter', 'handleClick1'],
+        ['PlaceholderText', 'test placeholder1'],
+        ['type', 'text'],
+      ];
+
+      for (let i = 0; i < strs.length; i++) {
+        const [key, val] = handleKeyVal(strs[i]);
+        const [expectedKey, expectedVal] = expectedResults[i];
+
+        expect(key).toEqual(expectedKey);
+        expect(val).toEqual(expectedVal);
       }
     });
   });
