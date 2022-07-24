@@ -12,14 +12,14 @@ import {
 } from 'constant';
 import TextHandler from 'TextHandler';
 import Formatter from './formatter';
-import { Attribute, ParserI, TestObject, TextValue } from './types';
+import { Elem, ParserI, TestObject, TextValue } from './types';
 class Parser implements ParserI {
   parseComponent: (component: () => JSX.Element) => Promise<string[]>;
 
   constructor() {
     class ParserHelper {
       testObject: TestObject;
-      elemStack: Attribute[];
+      elemStack: Elem[];
       pastFirst: boolean;
       commaFlag: boolean;
       possibleTextChild: boolean;
@@ -34,21 +34,21 @@ class Parser implements ParserI {
 
       handleFirstOpeningBracket = (
         str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
-        //we need to assign current str as the name of our first attribute
+        currentAttr: Elem
+      ): [str: string, newAttr: Elem] => {
+        //we need to assign current str as the name of our first Elem
         currentAttr.elemName = str.trim().replaceAll(DONT_KEEP_REGEX, '');
         str = '';
         this.pastFirst = true; //are we past the mainChild?
-        this.commaFlag = true; //are we within an elements attributes or not.
+        this.commaFlag = true; //are we within an elements Elems or not.
 
         return [str, currentAttr];
       };
 
       handleOpeningBracket = (
         str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
+        currentAttr: Elem
+      ): [str: string, newAttr: Elem] => {
         //we need to remove all unused chars
         /* TODO: this should be simplified to a single regex*/
         str = str.replace(CHILDREN_KEY, '');
@@ -61,7 +61,7 @@ class Parser implements ParserI {
 
         //we need to push our parent attr on the stack and assign a new currentAttr
         if (currentAttr) this.elemStack.push(currentAttr);
-        const newAttr: Attribute = {};
+        const newAttr: Elem = {};
         newAttr.elemName = str.trim().replaceAll(DONT_KEEP_REGEX, '');
         this.commaFlag = true;
 
@@ -86,50 +86,50 @@ class Parser implements ParserI {
         return [key, val];
       };
 
-      handleAttribute = (
+      handleElem = (
         str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
-        //we need to handle attribute assignment(onclick,data-testid, etc)
+        currentAttr: Elem
+      ): [str: string, newAttr: Elem] => {
+        //we need to handle Elem assignment(onclick,data-testid, etc)
         str = str.replaceAll('"', '');
         let [key, val] = str.split(':');
         key = key.trim().replaceAll(DONT_KEEP_REGEX, '');
         val = val ? val.trim().replaceAll(DONT_KEEP_REGEX, '') : val;
 
-        if (key && val) currentAttr[key.trim() as keyof Attribute] = val.trim();
+        if (key && val) currentAttr[key.trim() as keyof Elem] = val.trim();
 
         return ['', currentAttr];
       };
 
-      handleElems = (currentAttr: Attribute, str: string): void => {
+      handleElems = (currentAttr: Elem, str: string): void => {
         const parentElem = this.getParent();
         const [key, val] = this.handleKeyVal(str);
 
-        if (key && val) currentAttr[key as keyof Attribute] = val;
+        if (key && val) currentAttr[key as keyof Elem] = val;
 
         if (
           currentAttr != null &&
-          !(this.testObject.elems as Attribute[]).includes(currentAttr)
+          !(this.testObject.elems as Elem[]).includes(currentAttr)
         )
-          (this.testObject.elems as Attribute[]).push(currentAttr);
+          (this.testObject.elems as Elem[]).push(currentAttr);
 
         this.commaFlag = false;
 
         if (
           this.elemStack.length < 1 &&
           parentElem !== null &&
-          !(this.testObject.elems as Attribute[]).includes(parentElem)
+          !(this.testObject.elems as Elem[]).includes(parentElem)
         ) {
-          (this.testObject.elems as Attribute[]).push(parentElem);
+          (this.testObject.elems as Elem[]).push(parentElem);
         }
       };
 
-      getParent = (): Attribute => {
-        let parentElem: Attribute;
+      getParent = (): Elem => {
+        let parentElem: Elem;
         if (this.elemStack.length > 0) {
           parentElem = this.elemStack.pop();
           if (parentElem === null || parentElem === undefined) {
-            parentElem = {} as Attribute;
+            parentElem = {} as Elem;
           }
         }
 
@@ -138,9 +138,9 @@ class Parser implements ParserI {
 
       handleClosingBracket = (
         str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
-        //we need to close up currentAttr and retrieve last elem from stack in case attributes are placed at end of elem
+        currentAttr: Elem
+      ): [str: string, newAttr: Elem] => {
+        //we need to close up currentAttr and retrieve last elem from stack in case Elems are placed at end of elem
         const parentElem = this.getParent();
         this.handleElems(currentAttr, str);
 
@@ -149,8 +149,8 @@ class Parser implements ParserI {
 
       handlePossibleTextChildAtStart = (
         str: string,
-        currentAttr: Attribute
-      ): [str: string, newAttr: Attribute] => {
+        currentAttr: Elem
+      ): [str: string, newAttr: Elem] => {
         const parentElem = this.getParent();
 
         if (!str.includes(SINGLE || MULTI)) {
@@ -165,10 +165,10 @@ class Parser implements ParserI {
       handleChar = (
         char: string,
         str: string,
-        currentAttr: Attribute,
+        currentAttr: Elem,
         currentIndex?: number,
         jsx?: string
-      ): [str: string, newAttr: Attribute] => {
+      ): [str: string, newAttr: Elem] => {
         if (!(char in DONT_KEEP_MAP)) {
           str += char;
         }
@@ -198,7 +198,7 @@ class Parser implements ParserI {
           //we need to handle possible text child here
           return this.handlePossibleTextChildAtStart(str, currentAttr);
         } else if (char === ',' && str.includes(':') && this.commaFlag) {
-          return this.handleAttribute(str, currentAttr);
+          return this.handleElem(str, currentAttr);
         } else if (char === '}') {
           return this.handleClosingBracket(str, currentAttr);
         } else if (char === '[') {
@@ -211,7 +211,7 @@ class Parser implements ParserI {
       };
 
       getEvents = (jsx: string) => {
-        let currentAttr: Attribute = {};
+        let currentAttr: Elem = {};
         let str = '';
 
         for (let i = 0; i < jsx.length; i++) {
@@ -244,7 +244,7 @@ class Parser implements ParserI {
       let count = 1;
       return Promise.all(
         mainChild.map(async (jsx: string) => {
-          const elems: Attribute[] = [];
+          const elems: Elem[] = [];
           const multiple: TextValue = {};
           const newTestObject = {
             name: component.name + ' ' + count++,

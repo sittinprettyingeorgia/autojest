@@ -1,8 +1,9 @@
-export type AttributeType = {
+export type ElemType = {
   elemName?: string; // div, p, span etc.
   onClick?: boolean;
   onChange?: boolean;
   onMouseOver?: boolean;
+  onMouseEnter?: boolean;
   onMouseDown?: boolean;
   onMouseOut?: boolean;
   onKeyDown?: boolean;
@@ -17,8 +18,8 @@ export type AttributeType = {
   children?: string; //text child only
   role?: string;
 };
-export type Attribute = {
-  [key in keyof AttributeType]: string | boolean;
+export type Elem = {
+  [key in keyof ElemType]: string | boolean;
 };
 
 export type TextMap = {
@@ -42,10 +43,10 @@ export type TestObjectType = {
   PlaceholderText?: TextValue;
   AltText?: TextValue;
   multiple?: TextValue;
-  elems?: Attribute[];
+  elems?: Elem[];
 };
 export type TestObject = {
-  [key in keyof TestObjectType]: string | TextValue | Attribute[];
+  [key in keyof TestObjectType]: string | TextValue | Elem[];
 };
 
 export interface ChildList {
