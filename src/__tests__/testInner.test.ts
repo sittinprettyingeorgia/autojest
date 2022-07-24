@@ -3,18 +3,9 @@ import {
   handleFirstOpeningBracket,
   handleKeyVal,
   handleOpeningBracket,
+  getParent,
 } from 'testInner';
 import { Elem } from 'types';
-import {
-  DONT_KEEP_REGEX,
-  CHILDREN_KEY,
-  MULTIPLE_CHILD,
-  SINGLE_CHILD,
-  MULTI,
-  SINGLE,
-  DONT_KEEP_MAP,
-  MATCH_TEXT_CHILD,
-} from 'constant';
 
 describe('Testing inner functions', () => {
   let attr: Elem;
@@ -172,11 +163,9 @@ describe('Testing inner functions', () => {
       }
     });
   });
+
   describe('testing handleAttribtue', () => {
     let currentAttr: Elem;
-    let bracketStr1: string;
-    let elemStackResult: Elem[];
-    let newAttrResults: Elem[];
 
     beforeEach(() => {
       currentAttr = {};
@@ -216,6 +205,42 @@ describe('Testing inner functions', () => {
   });
 
   describe('testing getParent', () => {
-    it('should return the parent elem of our current elem or a new elem object', () => {});
+    let currentAttr: Elem;
+    let elemStack: Elem[];
+
+    beforeEach(() => {
+      currentAttr = {};
+      elemStack = [];
+    });
+    it('should return the parent elem of our current elem', () => {
+      const elem1: Elem = {};
+      const elem2: Elem = {};
+      const elem3: Elem = {};
+      elemStack = [elem1, elem2, elem3];
+      const elemStackResults = [...elemStack];
+
+      for (let i = elemStack.length - 1; i >= 0; i--) {
+        const parent = getParent(elemStack);
+        expect(parent).toBe(elemStackResults[i]);
+      }
+    });
+    it('should return new elem if parentElem is null or undefined', () => {
+      elemStack = [null, null, undefined];
+      const elemStackResults: Elem = {};
+
+      for (let i = elemStack.length - 1; i >= 0; i--) {
+        const parent = getParent(elemStack);
+        expect(parent).toEqual(elemStackResults);
+      }
+    });
+    it('should return new elem if parentElem is empty', () => {
+      elemStack = [];
+      const elemStackResults: Elem = {};
+
+      for (let i = elemStack.length - 1; i >= 0; i--) {
+        const parent = getParent(elemStack);
+        expect(parent).toEqual(elemStackResults);
+      }
+    });
   });
 });

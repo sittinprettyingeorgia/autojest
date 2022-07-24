@@ -10,8 +10,8 @@ const possibleTextChild = false;
  *
  * @returns Elem the parent element of our current element or a new Elem object.
  */
-const getParent = (elemStack: Elem[]): Elem => {
-  let parentElem: Elem;
+export const getParent = (elemStack: Elem[]): Elem => {
+  let parentElem: Elem = {};
 
   if (elemStack.length > 0) {
     parentElem = elemStack.pop();
